@@ -6,6 +6,7 @@
   "types": "index.d.ts",
   "scripts": {
     "test": "node tests/test.js",
+    "test-cli": "node cli/test-runner.js",
     "example": "node examples/basic-usage.js",
     "lint": "echo 'Linting...' && node -c index.js",
     "validate": "npm run lint && npm run test"

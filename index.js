@@ -255,7 +255,9 @@ class ContentGuard {
       'business', 'financial', 'market', 'investment', 'portfolio', 'equity',
       'debt', 'revenue', 'profit', 'budget', 'project', 'deadline',
       'corporate', 'company', 'organization', 'management', 'analysis',
-      'risk assessment', 'financial analysis', 'market analysis'
+      'risk assessment', 'financial analysis', 'market analysis',
+      'game development', 'game design', 'game balance', 'character design',
+      'player feedback', 'game mechanics', 'development team', 'game studio'
     ]
     
     // Professional email patterns
@@ -1073,7 +1075,16 @@ class ContentGuard {
     ]
     
     // Professional gaming terms that should not be flagged in business contexts
-    const professionalGamingTerms = ['gaming', 'game', 'player', 'balance', 'exploit']
+    const professionalGamingTerms = ['gaming', 'game', 'player', 'balance', 'exploit', 'character', 'nerf', 'buff']
+    
+    // Check if this is a game development context
+    const isGameDev = contexts.some(c => c.type === 'game_development') || 
+                     contexts.some(c => c.type === 'business') && 
+                     (content.allTextLower.includes('game') && 
+                      (content.allTextLower.includes('developer') || 
+                       content.allTextLower.includes('development') ||
+                       content.allTextLower.includes('balance') ||
+                       content.emailDomain.includes('game')))
     
     // Only flag "ratio" if NOT in protected professional contexts AND not discussing finance/math
     const shouldCheckRatio = !hasProtectedContext || 
@@ -1088,12 +1099,13 @@ class ContentGuard {
     
     gamingTrollKeywords.forEach(keyword => {
       if (content.allTextLower.includes(keyword)) {
-        // Check if this is professional game development context
-        const isGameDev = contexts.some(c => c.type === 'business') && 
-                         (content.allTextLower.includes('game') && 
-                          (content.allTextLower.includes('developer') || 
-                           content.allTextLower.includes('development') ||
-                           content.allTextLower.includes('balance')))
+        // Skip professional gaming terms in game development context
+        if (isGameDev && professionalGamingTerms.includes(keyword)) {
+          if (this.options.debug) {
+            console.log(`🧠 LAYER 4: Skipping professional gaming term "${keyword}" in game dev context`)
+          }
+          return
+        }
         
         // Reduce penalty for professional gaming terms in business context
         let penalty = 3
@@ -1153,7 +1165,7 @@ class ContentGuard {
     // Fake/troll names
     const trollNames = [
       'why would i tell you', 'not telling', 'nope', 'none of your business',
-      'anonymous', 'anon', 'test', 'user', 'admin', 'lol', 'lmao', 'ligma',
+      'anonymous', 'anon', 'admin', 'lol', 'lmao', 'ligma',
       'joe mama', 'deez nuts', 'candice', 'sawcon', 'sugma'
     ]
     
@@ -1259,7 +1271,17 @@ class ContentGuard {
     
     // Emoji spam detection
     const emojiCount = (content.allText.match(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]/gu) || []).length
-    if (emojiCount >= 5) {
+    
+    // Be more lenient with emojis if there's legitimate content
+    const hasLegitimateContent = content.allText.length > 50 && 
+                                (content.allText.includes('hello') || 
+                                 content.allText.includes('message') ||
+                                 content.allText.includes('happy') ||
+                                 content.allText.includes('thank'))
+    
+    const emojiThreshold = hasLegitimateContent ? 15 : 8
+    
+    if (emojiCount >= emojiThreshold) {
       score += 2
       flags.push(`Excessive emojis (${emojiCount})`)
       if (this.options.debug) {
@@ -1675,6 +1697,10 @@ class ContentGuard {
           bonus = -5 * Math.min(3, context.strength)
           description = `Legal context (${context.strength} terms)`
           break
+        case 'game_development':
+          bonus = -4 * Math.min(3, context.strength)
+          description = `Game development context (${context.strength} terms)`
+          break
       }
       
       if (bonus < 0) {
@@ -1868,6 +1894,15 @@ class ContentGuard {
     ).length
     if (legalCount >= 2) {
       contexts.push({ type: 'legal', strength: legalCount })
+    }
+    
+    // Game development context (subset of business)
+    const gameDevTerms = ['game', 'character', 'player', 'balance', 'nerf', 'buff', 'overpowered']
+    const gameDevCount = gameDevTerms.filter(term =>
+      lowerText.includes(term.toLowerCase())
+    ).length
+    if (gameDevCount >= 2 && (lowerText.includes('development') || lowerText.includes('developer') || content.emailDomain.includes('game'))) {
+      contexts.push({ type: 'game_development', strength: gameDevCount })
     }
     
     return contexts
