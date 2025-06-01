@@ -1,7 +1,7 @@
 {
   "name": "content-guard",
-  "version": "2.1.0",
-  "description": "Lightweight, modular content analysis system with context-aware spam, toxicity, and harassment detection for modern applications",
+  "version": "3.0.0",
+  "description": "Next-generation content analysis system with advanced harassment detection, context intelligence, and adversarial attack resistance for enterprise applications",
   "main": "index.js",
   "types": "index.d.ts",
   "sideEffects": false,
@@ -11,20 +11,39 @@
   "scripts": {
     "test": "node tests/test.js",
     "test-cli": "node cli/test-runner.js",
+    "test:context": "node tests/context-test.js",
+    "test:harassment": "node tests/harassment-test.js",
     "example": "node examples/basic-usage.js",
     "lint": "echo 'Linting...' && node -c index.js",
     "validate": "npm run lint && npm run test",
-    "benchmark": "node benchmark.js",
+    "benchmark": "node tests/massive-benchmark-v3.js",
+    "benchmark:v2": "node benchmark.js",
+    "performance": "node tests/performance-test.js",
     "docs": "typedoc --out docs index.js lib/ --readme README.md",
-    "build": "npm run validate && npm run benchmark"
+    "build": "npm run validate && npm run benchmark",
+    "prepublishOnly": "npm run validate && npm run benchmark"
   },
   "keywords": [
     "content-moderation",
+    "harassment-detection",
+    "context-aware",
     "spam-filter",
     "toxicity-detection",
     "text-analysis",
-    "context-aware",
-    "harassment-detection",
+    "workplace-harassment",
+    "power-dynamics",
+    "gaslighting-detection",
+    "microaggressions",
+    "social-exclusion",
+    "veiled-threats",
+    "adversarial-resistance",
+    "unicode-normalization",
+    "leetspeak-detection",
+    "professional-context",
+    "technical-communications",
+    "business-intelligence",
+    "medical-communications",
+    "academic-research",
     "profanity-filter",
     "sentiment-analysis",
     "troll-detection",
@@ -41,7 +60,9 @@
     "lightweight",
     "typescript",
     "esm",
-    "tree-shakeable"
+    "tree-shakeable",
+    "enterprise-grade",
+    "production-ready"
   ],
   "author": {
     "name": "ContentGuard Contributors",
@@ -87,7 +108,8 @@
     "cli/",
     "README.md",
     "LICENSE",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "FINAL_IMPROVEMENTS_SUMMARY.md"
   ],
   "exports": {
     ".": {
