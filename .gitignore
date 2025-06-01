@@ -121,3 +121,4 @@ test-results/
 
 # Custom
 configs/saved-configs.json 
+node_modules

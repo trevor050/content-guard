@@ -262,7 +262,7 @@ async function runExamples() {
   console.log('=' .repeat(50))
   
   const performanceGuard = new ContentGuard({ debug: false })
-  const testMessages = [
+  const performanceMessages = [
     'Hello world',
     'This is spam content with bad words',
     'Engineering research proposal',
@@ -274,13 +274,13 @@ async function runExamples() {
   const startTime = Date.now()
   
   for (let i = 0; i < iterations; i++) {
-    for (const message of testMessages) {
+    for (const message of performanceMessages) {
       await performanceGuard.analyze({ message })
     }
   }
   
   const endTime = Date.now()
-  const totalAnalyses = iterations * testMessages.length
+  const totalAnalyses = iterations * performanceMessages.length
   const avgTime = (endTime - startTime) / totalAnalyses
   
   console.log(`\n⚡ Performance Results:`)

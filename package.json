@@ -6,21 +6,9 @@
   "types": "index.d.ts",
   "scripts": {
     "test": "node tests/test.js",
-    "test:verbose": "node tests/test.js --verbose",
-    "test:comprehensive": "node tests/comprehensive-test.js",
-    "test:iterative": "node tests/iterative-test.js",
-    "test:custom": "node tests/custom-test.js",
-    "test:performance": "node tests/performance-test.js",
-    "test:ml": "node tests/ml-test.js",
-    "test:super": "node tests/super-advanced-test.js",
-    "benchmark": "node tests/benchmark.js",
-    "benchmark:advanced": "node tests/advanced-benchmark.js",
-    "cli": "node cli/contentguard-cli.js",
-    "train": "node ml/train-model.js",
     "example": "node examples/basic-usage.js",
     "lint": "echo 'Linting...' && node -c index.js",
-    "validate": "npm run lint && npm run test",
-    "analyze": "node cli/analyze.js"
+    "validate": "npm run lint && npm run test"
   },
   "keywords": [
     "content-moderation",
@@ -83,7 +71,6 @@
   "files": [
     "index.js",
     "index.d.ts",
-    "lib/",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
