@@ -1,5 +1,5 @@
 /**
- * 🛡️ ContentGuard v2.1 - Modern Content Analysis System
+ * 🛡️ ContentGuard v2.0 - Modern Content Analysis System
  * 
  * A lightweight, modular, and high-performance content analysis system
  * with context-aware detection and plugin architecture.
@@ -9,7 +9,7 @@
  */
 
 const PluginManager = require('./lib/core/plugin-manager')
-const { LRUCache, deepMerge, fastHash, safeRegexTest } = require('./lib/utils')
+const { LRUCache, deepMerge, simpleHash } = require('./lib/utils')
 
 // Lazy-loaded plugins
 let ObscenityPlugin = null
@@ -134,86 +134,38 @@ class ContentGuard {
         let score = 0
         const flags = []
 
-        // Check for game development context first
-        const isGameDev = content.allTextLower.includes('game') && 
-                         (content.allTextLower.includes('development') || 
-                          content.allTextLower.includes('developer') ||
-                          content.allTextLower.includes('balance') ||
-                          content.allTextLower.includes('character') ||
-                          content.emailDomain.includes('game'))
-
-        // Harassment patterns with safe regex
+        // Harassment patterns
         HARASSMENT_PATTERNS.forEach(pattern => {
-          if (safeRegexTest(pattern, content.allText)) {
+          if (pattern.test(content.allText)) {
             score += 6
             flags.push('Harassment pattern detected')
           }
         })
 
-        // Scam patterns with safe regex
+        // Scam patterns
         SCAM_PATTERNS.forEach(pattern => {
-          if (safeRegexTest(pattern, content.allText)) {
+          if (pattern.test(content.allText)) {
             score += 8
             flags.push('Scam pattern detected')
           }
         })
 
-        // Enhanced doxxing/threat patterns with safe execution
-        const doxxingPatterns = [
-          /would be unfortunate/i,
-          /personal information.*public/i,
-          /find.*information.*online/i,
-          /interesting.*about you/i,
-          /know where you/i,
-          /found.*information.*about/i
-        ]
-        
-        doxxingPatterns.forEach(pattern => {
-          if (safeRegexTest(pattern, content.allText)) {
-            score += 10
-            flags.push('Doxxing/threat pattern detected')
-          }
-        })
-
-        // Evasion patterns - but skip "nerf" in game dev context
+        // Evasion patterns
         EVASION_PATTERNS.forEach(pattern => {
-          if (safeRegexTest(pattern, content.allText)) {
-            // Special handling for game development context
-            if (isGameDev && content.allTextLower.includes('nerf')) {
-              // Skip this evasion detection in game dev context
-              return
-            }
+          if (pattern.test(content.allText)) {
             score += 8
             flags.push('Evasion attempt detected')
           }
         })
 
-        // Gaming troll keywords - enhanced detection
+        // Gaming troll keywords
         const trollCount = GAMING_TROLL_KEYWORDS.filter(keyword => 
           content.allTextLower.includes(keyword)
         ).length
 
-        if (trollCount >= 5) {
-          score += 6
-          flags.push(`Heavy gaming troll language (${trollCount} terms)`)
-        } else if (trollCount >= 3) {
+        if (trollCount >= 3) {
           score += 4
           flags.push(`Multiple gaming troll terms (${trollCount})`)
-        }
-
-        // Enhanced toxic gaming phrases
-        const toxicGamingPhrases = [
-          'uninstall', 'go touch grass', 'basement dweller', 'ratio + l', 'cope harder',
-          'you are trash at', 'git gud scrub', 'skill issue'
-        ]
-        
-        const toxicCount = toxicGamingPhrases.filter(phrase =>
-          content.allTextLower.includes(phrase)
-        ).length
-        
-        if (toxicCount >= 2) {
-          score += 8
-          flags.push(`Toxic gaming harassment (${toxicCount} phrases)`)
         }
 
         // Troll names
@@ -354,7 +306,7 @@ class ContentGuard {
       // Add metadata
       analysis.metadata = {
         processingTime: Date.now() - startTime,
-        version: '2.1.0',
+        version: '2.0.0',
         enabledPlugins: this.pluginManager.getEnabled(),
         timestamp: new Date().toISOString(),
         earlyExit: pluginResults._earlyExit || false
@@ -572,7 +524,7 @@ class ContentGuard {
    */
   generateCacheKey(input) {
     const content = `${input.name || ''}|${input.email || ''}|${input.subject || ''}|${input.message || ''}`
-    return fastHash(content)
+    return simpleHash(content)
   }
 
   /**
@@ -680,6 +632,53 @@ module.exports = {
   // Constants
   constants: require('./lib/constants/context-data'),
   
-  // Enhanced presets from separate module
-  presets: require('./lib/presets')
+  // Presets for easy configuration
+  presets: {
+    strict: {
+      spamThreshold: 3,
+      plugins: {
+        obscenity: { weight: 1.5 },
+        sentiment: { weight: 1.2 },
+        patterns: { weight: 1.3 },
+        validation: { weight: 1.0 }
+      }
+    },
+    moderate: {
+      spamThreshold: 5,
+      plugins: {
+        obscenity: { weight: 1.0 },
+        sentiment: { weight: 1.0 },
+        patterns: { weight: 1.0 },
+        validation: { weight: 0.5 }
+      }
+    },
+    lenient: {
+      spamThreshold: 8,
+      plugins: {
+        obscenity: { weight: 0.8 },
+        sentiment: { weight: 0.8 },
+        patterns: { weight: 0.9 },
+        validation: { weight: 0.3 }
+      }
+    },
+    gaming: {
+      spamThreshold: 4,
+      plugins: {
+        obscenity: { weight: 1.2 },
+        patterns: { weight: 1.5 },
+        sentiment: { weight: 0.8 },
+        validation: { weight: 0.2 }
+      }
+    },
+    professional: {
+      spamThreshold: 6,
+      contextAware: true,
+      plugins: {
+        obscenity: { weight: 0.7, contextAware: true },
+        sentiment: { weight: 0.8, contextAware: true },
+        patterns: { weight: 1.0 },
+        validation: { weight: 1.0 }
+      }
+    }
+  }
 } 
