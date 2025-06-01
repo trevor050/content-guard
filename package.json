@@ -1,6 +1,6 @@
 {
   "name": "content-guard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Advanced content analysis system with context-aware spam, toxicity, and harassment detection for modern applications",
   "main": "index.js",
   "types": "index.d.ts",
