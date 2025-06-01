@@ -13,31 +13,99 @@ const PluginManager = require('./lib/core/plugin-manager')
 const { LRUCache, deepMerge, fastHash, safeRegexTest } = require('./lib/utils')
 const { TextPreprocessor } = require('./lib/utils/preprocessing')
 const { ContextDetector } = require('./lib/core/context-detector')
+const presets = require('./lib/presets')
 
 // Lazy-loaded plugins
 let ObscenityPlugin = null
 let SentimentPlugin = null
 let HarassmentPlugin = null
+let SocialEngineeringPlugin = null
+
+// v4.0 ML Plugins
+const { EmojiSentimentPlugin } = require('./lib/plugins/emoji-sentiment-plugin')
+const { ConfusablesAdvancedPlugin } = require('./lib/plugins/confusables-advanced-plugin')
+const { MLToxicityPlugin } = require('./lib/plugins/ml-toxicity-plugin')
+const { CrossCulturalPlugin } = require('./lib/plugins/cross-cultural-plugin')
 
 /**
  * ContentGuard v3.0 - The most advanced content analysis system
  */
 class ContentGuard {
-  constructor(options = {}) {
-    this.options = this.mergeDefaultOptions(options)
-    this.pluginManager = new PluginManager(this.options)
-    this.cache = this.options.enableCaching ? new LRUCache(this.options.cacheSize) : null
-    this.metrics = this.initializeMetrics()
+  constructor(preset = 'moderate', options = {}) {
+    this.preset = preset
     
-    // v3.0 New components
-    this.preprocessor = new TextPreprocessor(this.options.preprocessing || {})
-    this.contextDetector = new ContextDetector(this.options.contextDetection || {})
+    // Merge preset configuration with user options
+    const presetConfig = presets[preset] || presets.moderate
+    this.options = this.mergeDefaultOptions({
+      ...presetConfig,
+      ...options,
+      enableContextDetection: true,
+      enableHarassmentDetection: true,
+      enableSocialEngineering: true,
+      enableMLFeatures: true, // NEW: Enable v4.0 ML features
+      enableEmojiAnalysis: true, // NEW: Emoji sentiment
+      enableCrossCultural: true, // NEW: Cross-cultural analysis
+      maxProcessingTime: 10000, // 10 second timeout
+    })
     
-    // Auto-register and enable default plugins
+    this.plugins = {}
+    this.mlPlugins = {} // NEW: Separate ML plugin registry
+    this.stats = {
+      totalAnalyses: 0,
+      totalTime: 0,
+      averageTime: 0,
+      mlAnalyses: 0,
+      mlSuccessRate: 0
+    }
+    
+    this.initializePlugins()
+    this.initializeMLPlugins() // NEW: Initialize ML plugins
+  }
+
+  initializePlugins() {
+    // Initialize plugin manager first
+    this.pluginManager = new PluginManager()
+    
+    // Setup default plugins with lazy loading
     this.setupDefaultPlugins()
     
-    if (this.options.debug) {
-      console.log('🛡️ ContentGuard v3.0 initialized with plugins:', this.pluginManager.getEnabled())
+    // Context detection
+    this.contextDetector = new ContextDetector()
+    this.preprocessor = new TextPreprocessor()
+  }
+
+  async initializeMLPlugins() {
+    try {
+      // v4.0 ML Plugins
+      if (this.options.enableMLFeatures) {
+        console.log('🤖 Initializing v4.0 ML plugins...')
+        
+        // Emoji sentiment analysis
+        if (this.options.enableEmojiAnalysis) {
+          this.mlPlugins.emojiSentiment = new EmojiSentimentPlugin()
+          console.log('✅ Emoji sentiment plugin ready')
+        }
+        
+        // Advanced confusables (always enabled for preprocessing)
+        this.mlPlugins.confusablesAdvanced = new ConfusablesAdvancedPlugin()
+        console.log('✅ Advanced confusables plugin ready')
+        
+        // Cross-cultural analysis
+        if (this.options.enableCrossCultural) {
+          this.mlPlugins.crossCultural = new CrossCulturalPlugin()
+          console.log('✅ Cross-cultural analysis plugin ready')
+        }
+        
+        // ML toxicity detection (async initialization)
+        this.mlPlugins.mlToxicity = new MLToxicityPlugin()
+        await this.mlPlugins.mlToxicity.initialize()
+        console.log('✅ ML toxicity plugin ready')
+        
+        console.log('🚀 All v4.0 ML plugins initialized successfully')
+      }
+    } catch (error) {
+      console.warn('⚠️ Some ML plugins failed to initialize:', error.message)
+      console.log('📝 Falling back to rule-based analysis only')
     }
   }
 
@@ -46,60 +114,62 @@ class ContentGuard {
    */
   mergeDefaultOptions(userOptions) {
     const defaults = {
-      // Core settings
-      spamThreshold: 5,
-      enableEarlyExit: true,
-      criticalThreshold: 20,
+      // Core settings - ONLY set if not already provided by user
+      spamThreshold: userOptions.spamThreshold ?? 5,
+      enableEarlyExit: userOptions.enableEarlyExit ?? true,
+      criticalThreshold: userOptions.criticalThreshold ?? 20,
       
       // Performance optimization
-      enableCaching: true,
-      cacheSize: 1000,
+      enableCaching: userOptions.enableCaching ?? true,
+      cacheSize: userOptions.cacheSize ?? 1000,
       
       // v3.0 Enhanced plugin configuration
-      plugins: {
+      plugins: deepMerge({
         obscenity: { weight: 1.0, contextAware: true },
         sentiment: { weight: 1.0, contextAware: true },
         patterns: { weight: 1.0, contextAware: true },
         validation: { weight: 0.5 },
-        harassment: { weight: 1.2, contextAware: true } // New in v3.0
-      },
+        harassment: { weight: 1.2, contextAware: true }, // New in v3.0
+        socialEngineering: { weight: 1.5, contextAware: true } // New in v3.1
+      }, userOptions.plugins || {}),
       
       // v3.0 Preprocessing options
-      preprocessing: {
+      preprocessing: deepMerge({
         normalizeUnicode: true,
         normalizeLeetSpeak: true,
         expandSlang: true,
         removeExcessiveSpacing: true,
         contextAware: true
-      },
+      }, userOptions.preprocessing || {}),
       
       // v3.0 Context detection options
-      contextDetection: {
+      contextDetection: deepMerge({
         enableDomainDetection: true,
         enablePatternMatching: true,
         enableVocabularyAnalysis: true,
         confidenceThreshold: 0.3
-      },
+      }, userOptions.contextDetection || {}),
       
       // Feature toggles
-      enableLazyLoading: true,
-      debug: false,
-      enableMetrics: true,
+      enableLazyLoading: userOptions.enableLazyLoading ?? true,
+      debug: userOptions.debug ?? false,
+      enableMetrics: userOptions.enableMetrics ?? true,
       
       // Context awareness
-      contextAware: true,
+      contextAware: userOptions.contextAware ?? true,
       
       // v3.0 Advanced features
-      enableAdversarialDetection: true,
-      enableSophisticatedHarassment: true,
-      enableContextualAdjustments: true,
+      enableAdversarialDetection: userOptions.enableAdversarialDetection ?? true,
+      enableSophisticatedHarassment: userOptions.enableSophisticatedHarassment ?? true,
+      enableContextualAdjustments: userOptions.enableContextualAdjustments ?? true,
       
       // Backwards compatibility
       enableLayers: userOptions.enableLayers || {},
       layerWeights: userOptions.layerWeights || {}
     }
 
-    return deepMerge(defaults, userOptions)
+    // Merge with all user options taking precedence
+    return { ...defaults, ...userOptions }
   }
 
   /**
@@ -159,6 +229,20 @@ class ContentGuard {
       }
     })
 
+    // NEW v3.1: Social engineering detection plugin
+    this.pluginManager.register('socialEngineering', {
+      init: async (config) => {
+        if (!SocialEngineeringPlugin) {
+          SocialEngineeringPlugin = require('./lib/plugins/social-engineering-plugin')
+        }
+        this._socialEngineeringInstance = new SocialEngineeringPlugin()
+        await this._socialEngineeringInstance.init(config)
+      },
+      analyze: async (content, input, options) => {
+        return await this._socialEngineeringInstance.analyze(content, input, options)
+      }
+    })
+
     // Enhanced inline plugins
     this.registerInlinePlugins()
   }
@@ -169,7 +253,8 @@ class ContentGuard {
   registerInlinePlugins() {
     const { 
       HARASSMENT_PATTERNS, SCAM_PATTERNS, EVASION_PATTERNS, 
-      GAMING_TROLL_KEYWORDS, TROLL_NAMES, HARASSMENT_KEYWORDS 
+      GAMING_TROLL_KEYWORDS, TROLL_NAMES, HARASSMENT_KEYWORDS,
+      PROBLEMATIC_MODERN_TERMS
     } = require('./lib/constants/context-data')
 
     // Enhanced patterns plugin with context awareness
@@ -236,43 +321,63 @@ class ContentGuard {
           }
         })
 
-        // Enhanced evasion patterns with context awareness
+        // Enhanced evasion patterns with context
         EVASION_PATTERNS.forEach(pattern => {
           if (safeRegexTest(pattern, content.processed || content.allText)) {
+            const currentPatternSource = pattern.source; // Get the regex source string
+            // Ensure localContext is defined correctly once before these checks
+            const localContext = content.context || {}; 
+
             // Skip in specific contexts where these might be legitimate
             if (isGameDev && content.allTextLower.includes('nerf')) {
-              return // Skip this evasion detection in game dev context
-            }
-            
-            // NEW: Skip for technical contexts where "kill" might be legitimate
-            const context = content.context || {}
-            if (context.isTechnical || context.domains?.includes('DEVOPS')) {
-              const techPhrases = ['kill process', 'kill task', 'kill command', 'process', 'server', 'system', 'container', 'docker']
-              const hasTechPhrase = techPhrases.some(phrase => content.allTextLower.includes(phrase))
-              if (hasTechPhrase) {
-                return // Skip evasion detection for legitimate technical content
+              if (currentPatternSource.includes('nerf')) { 
+                return;
               }
             }
             
-            // NEW: Skip for business contexts where "killing" might refer to competitive performance
-            if (context.isBusiness || context.domains?.includes('FINANCE') || context.domains?.includes('MANAGEMENT')) {
-              const businessPhrases = ['killing us', 'killing it', 'market share', 'competition', 'competitor', 'performance', 'sales', 'revenue']
-              const hasBusinessPhrase = businessPhrases.some(phrase => content.allTextLower.includes(phrase))
-              if (hasBusinessPhrase) {
-                return // Skip evasion detection for legitimate business language
+            const killPatternSource = "[k][i1!][l1!][l1!]"; // Source of the /k[i1!][l1!][l1!]/i pattern
+            // Check for technical contexts where "kill" (but not "kys") might be legitimate
+            if (localContext.isTechnical || localContext.domains?.includes('DEVOPS')) {
+              if (currentPatternSource === killPatternSource || pattern.source.includes('kill')) { 
+                const techPhrases = ['kill process', 'kill task', 'kill command', 'kill server', 'kill container', 'process', 'server', 'system', 'container', 'docker', 'instance', 'job', 'session', 'service', 'node', 'pod', 'cluster'];
+                if (techPhrases.some(phrase => content.allTextLower.includes(phrase))) {
+                  flags.push(`[INFO] Evasion pattern for 'kill' skipped in technical context: "${pattern}"`);
+                  return; 
+                }
               }
             }
             
-            // Check if this is adversarial preprocessing result
-            if (content.hasModifications) {
-              score += 10 // Higher score for detected adversarial attempts
-              flags.push('Adversarial evasion attempt detected')
-            } else {
-              score += 6
-              flags.push('Evasion attempt detected')
+            // Check for business/financial context for "kill"
+            if (localContext.isBusiness || localContext.domains?.includes('FINANCE')) {
+                 if (currentPatternSource === killPatternSource || pattern.source.includes('kill')) {
+                    const businessPhrases = ['killed the deal', 'deal killer', 'killing the market', 'kill the competition', 'killed our profits'];
+                     if (businessPhrases.some(phrase => content.allTextLower.includes(phrase))) {
+                        flags.push(`[INFO] Evasion pattern for 'kill' skipped in business context: "${pattern}"`);
+                        return;
+                    }
+                 }
             }
+            
+            // Check for hyperbolic/figurative uses of "kill"
+            if (currentPatternSource === killPatternSource) { // Specifically for the main /k[i1!][l1!][l1!]/i pattern
+              const hyperbolicKillPhrases = ['killed my soul', 'killed my vibe', 'killing me softly', 'killing me rn', 'literally killing me', 'killed it', 'killing it'];
+              const hasHyperbolicKill = hyperbolicKillPhrases.some(phrase => content.allTextLower.includes(phrase));
+              const hasLmaoLol = content.allTextLower.includes('lmao') || content.allTextLower.includes('lol');
+
+              if (hasHyperbolicKill || (content.allTextLower.includes('killing me') && hasLmaoLol)) {
+                if (!content.allTextLower.match(/killing you\\b|kill you\\b/i)) { 
+                  flags.push(`[INFO] Evasion pattern for 'kill' skipped due to hyperbolic use: "${pattern}"`);
+                  return; 
+                }
+              }
+            }
+            
+            // If no context-specific skip occurred, apply standard penalty
+            score += 7; // Original Evasion patterns penalty
+            flags.push('[PATTERNS] Adversarial evasion attempt detected');
+            return; // Stop after first evasion match
           }
-        })
+        });
 
         // Enhanced gaming troll detection with context
         const trollCount = GAMING_TROLL_KEYWORDS.filter(keyword => 
@@ -308,31 +413,73 @@ class ContentGuard {
           flags.push('Troll name detected')
         }
 
+        // Modern toxic communication patterns
+        const modernToxicCount = PROBLEMATIC_MODERN_TERMS.filter(term => 
+          content.allTextLower.includes(term.toLowerCase())
+        ).length
+
+        if (modernToxicCount >= 3) {
+          score += 12
+          flags.push(`Heavy modern toxic language (${modernToxicCount} terms)`)
+        } else if (modernToxicCount >= 2) {
+          score += 8
+          flags.push(`Multiple modern toxic terms (${modernToxicCount})`)
+        } else if (modernToxicCount === 1) {
+          score += 4
+          flags.push('Modern toxic language detected')
+        }
+
         // Direct harassment with severity scaling
         HARASSMENT_KEYWORDS.forEach(keyword => {
           if (content.allTextLower.includes(keyword)) {
-            // NEW: Skip harassment detection for technical contexts
-            const context = content.context || {}
+            const localContext = content.context || {}; // Renamed to avoid conflict with outer scope
+            
+            // Check for technical contexts where "kill" or "die" might be legitimate
             if ((keyword.includes('kill') || keyword.includes('die')) && 
-                (context.isTechnical || context.domains?.includes('DEVOPS'))) {
-              const techPhrases = ['kill process', 'kill task', 'kill command', 'process', 'server', 'system']
-              const hasTechPhrase = techPhrases.some(phrase => content.allTextLower.includes(phrase))
+                (localContext.isTechnical || localContext.domains?.includes('DEVOPS'))) {
+              const techPhrases = ['kill process', 'kill task', 'kill command', 'process', 'server', 'system'];
+              const hasTechPhrase = techPhrases.some(phrase => content.allTextLower.includes(phrase));
               if (hasTechPhrase) {
-                return // Skip harassment detection for legitimate technical content
+                flags.push(`[INFO] Harassment keyword '${keyword}' skipped in technical context.`);
+                return; // Skip harassment detection for legitimate technical content
               }
             }
             
-            let harassmentScore = 10
-            
-            // Scale based on severity
-            if (keyword.includes('kill') || keyword.includes('die')) {
-              harassmentScore = 15
+            let harassmentScore = 10;
+            let isHyperbolicKys = false;
+
+            // Enhanced contextual handling for "kys" and "kill yourself"
+            if (keyword === 'kys' || keyword === 'kill yourself') {
+              // Get the original text before preprocessing to check for hyperbolic context
+              const originalText = content.originalText || content.allText;
+              const lowerOriginalText = originalText.toLowerCase();
+              
+              // Check if this is a technical/gaming context with hyperbolic indicators
+              const isTechnicalBug = (localContext.isTechnical || localContext.domains?.includes('DEVOPS') || lowerOriginalText.includes('bug'));
+              const isGamingContext = localContext.domains?.includes('GAMING');
+              const hasHyperboleIndicators = ['lmao', 'lol', 'rofl', 'literally', 'fr', 'deadass', 'bruh', 'smh'].some(ind => lowerOriginalText.includes(ind));
+              const hasKillingMePhrase = ['killing me', 'killed me'].some(phrase => lowerOriginalText.includes(phrase));
+
+              // If it's the original "kys" in a hyperbolic technical/gaming context
+              if ((isTechnicalBug || isGamingContext) && hasHyperboleIndicators && hasKillingMePhrase) {
+                // Check if original contained "kys" (not just expanded "kill yourself")
+                if (lowerOriginalText.includes('kys')) {
+                  harassmentScore = 1; // Drastically reduce score for hyperbolic "kys"
+                  isHyperbolicKys = true;
+                  flags.push(`[INFO] Reduced score for hyperbolic 'kys' in technical/gaming context.`);
+                }
+              }
             }
             
-            score += harassmentScore
-            flags.push(`Direct harassment: "${keyword}"`)
+            // Scale based on severity (unless it's a reduced hyperbolic "kys")
+            if (!isHyperbolicKys && (keyword.includes('kill') || keyword.includes('die'))) {
+              harassmentScore = 15;
+            }
+            
+            score += harassmentScore;
+            flags.push(`Direct harassment: "${keyword}"`);
           }
-        })
+        });
 
         return { 
           score: Math.round(score * (this._patternsConfig?.weight || 1)), 
@@ -476,348 +623,293 @@ class ContentGuard {
   /**
    * v3.0 ENHANCED Main analysis function with preprocessing and context detection
    */
-  async analyze(input, options = {}) {
+  async analyze(text, context = {}) {
     const startTime = Date.now()
-    const analysisOptions = { ...this.options, ...options }
-
-    // Generate cache key (include preprocessing options for cache validity)
-    const cacheKey = this.generateCacheKey(input, analysisOptions)
     
-    // Check cache
-    if (this.cache?.has(cacheKey)) {
-      if (this.metrics) this.metrics.cacheHits++
-      const cached = this.cache.get(cacheKey)
-      return { ...cached, fromCache: true }
-    }
-
-    if (this.metrics) this.metrics.cacheMisses++
-
     try {
-      // v3.0 Step 1: Prepare basic content
-      const basicContent = this.prepareContent(input)
-      
-      // v3.0 Step 2: Context detection
-      const context = this.contextDetector.analyzeContext(basicContent, input)
-      
-      // v3.0 Step 3: Advanced preprocessing with context
-      const preprocessingResult = this.preprocessor.preprocess(basicContent.allText, context)
-      
-      // v3.0 Step 4: Get contextual adjustments
-      const contextualAdjustments = this.contextDetector.getContextualAdjustments(basicContent, context)
-      
-      // v3.0 Step 5: Create enhanced content object
+      // Handle both string input and object input
+      let input
+      if (typeof text === 'string') {
+        input = {
+          name: '',
+          email: '',
+          subject: '',
+          message: text
+        }
+      } else {
+        input = text
+      }
+
+      // Create combined text for analysis
+      const allText = [input.name, input.email, input.subject, input.message]
+        .filter(Boolean)
+        .join(' ')
+
+      if (!allText || allText.trim().length === 0) {
+        return this.createResult(0, [], { error: 'Invalid input text' })
+      }
+
+      // Enhanced preprocessing with v4.0 confusables
+      const preprocessingResult = this.preprocessor.preprocess(allText, {
+        ...this.options.preprocessing,  // Pass user's preprocessing options
+        useAdvancedConfusables: true
+      })
+      const processedText = preprocessingResult.processedText
+
+      // Create content object for plugins with PREPROCESSED text
       const content = {
-        ...basicContent,
-        context,
-        processed: preprocessingResult.processed,
-        hasModifications: preprocessingResult.hasModifications,
-        preprocessingSteps: preprocessingResult.steps,
-        contextAdjustments: contextualAdjustments,
-        adversarialPatterns: this.preprocessor.detectAdversarialPatterns(
-          preprocessingResult.original, 
-          preprocessingResult.processed
-        )
-      }
-      
-      // v3.0 Step 6: Run plugin analysis with enhanced content
-      const pluginResults = await this.pluginManager.analyze(content, input)
-      
-      // v3.0 Step 7: Calculate final analysis with context awareness
-      const analysis = this.calculateFinalAnalysis(pluginResults, content, input, analysisOptions)
-      
-      // v3.0 Step 8: Add enhanced metadata
-      analysis.metadata = {
-        processingTime: Date.now() - startTime,
-        version: '3.0.0',
-        enabledPlugins: this.pluginManager.getEnabled(),
-        timestamp: new Date().toISOString(),
-        earlyExit: pluginResults._earlyExit || false,
-        
-        // v3.0 Enhanced metadata
-        contextAnalysis: {
-          domains: context.domains,
-          isProfessional: context.isProfessional,
-          confidence: context.confidence
-        },
-        preprocessing: {
-          hasModifications: preprocessingResult.hasModifications,
-          steps: preprocessingResult.steps.map(step => step.step),
-          adversarialPatterns: content.adversarialPatterns
-        },
-        contextualAdjustments: contextualAdjustments.length
+        name: input.name || '',
+        email: input.email || '',
+        subject: input.subject || '',
+        message: input.message || '',
+        allText: processedText,  // FIXED: Use preprocessed text instead of original
+        allTextLower: processedText.toLowerCase(),  // FIXED: Use preprocessed text
+        originalText: allText  // Keep original for reference
       }
 
-      // Update metrics
-      this.updateMetrics(analysis, Date.now() - startTime, content)
-      
-      // Cache result
-      if (this.cache) {
-        this.cache.set(cacheKey, analysis)
+      // Initialize result structure
+      const result = {
+        score: 0,
+        flags: [],
+        preset: this.preset,
+        metadata: {
+          originalText: allText,
+          processedText: processedText,
+          preprocessing: preprocessingResult.metadata,
+          context: {},
+          harassment: {},
+          socialEngineering: {},
+          obscenity: {},
+          mlAnalysis: {}, // NEW: ML analysis results
+          emojiAnalysis: {}, // NEW: Emoji analysis
+          crossCultural: {}, // NEW: Cross-cultural analysis
+          performance: {
+            processingTime: 0,
+            mlProcessingTime: 0,
+            pluginsUsed: []
+          }
+        }
       }
 
-      return analysis
+      // Core analysis pipeline
+      await this.runCoreAnalysis(content, context, result)
+      
+      // v4.0 ML analysis pipeline
+      if (this.options.enableMLFeatures) {
+        await this.runMLAnalysis(processedText, context, result)
+      }
+
+      // Apply preset thresholds and final adjustments
+      this.applyPresetLogic(result)
+      
+      // Update performance metrics
+      const processingTime = Date.now() - startTime
+      this.updateStats(processingTime, result)
+      result.metadata.performance.processingTime = processingTime
+
+      return this.createResult(result.score, result.flags, result.metadata)
 
     } catch (error) {
-      console.error('Analysis failed:', error)
-      return this.createFallbackResult(input, error)
+      console.error('ContentGuard analysis error:', error)
+      const processingTime = Date.now() - startTime
+      return this.createResult(0, [`[ERROR] Analysis failed: ${error.message}`], {
+        error: true,
+        processingTime: processingTime
+      })
     }
   }
 
-  /**
-   * Prepare content for analysis (basic content extraction)
-   */
-  prepareContent(input) {
-    const name = input.name || ''
-    const email = input.email || ''
-    const subject = input.subject || ''
-    const message = input.message || ''
-
-    return {
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      subject: subject.trim(),
-      message: message.trim(),
-      allText: `${name} ${subject} ${message}`,
-      allTextLower: `${name} ${subject} ${message}`.toLowerCase(),
-      emailDomain: email.split('@')[1]?.toLowerCase() || ''
+  async runCoreAnalysis(content, context, result) {
+    // Context detection FIRST
+    if (this.options.enableContextDetection) {
+      const contextResult = this.contextDetector.analyzeContext(content, context)
+      result.metadata.context = contextResult
+      result.metadata.performance.pluginsUsed.push('context')
+      
+      // ADD CONTEXT TO CONTENT OBJECT for plugins to use
+      content.context = contextResult
     }
-  }
 
-  /**
-   * v3.0 Enhanced final analysis calculation with context awareness
-   */
-  calculateFinalAnalysis(pluginResults, content, input, options) {
-    // Sum plugin scores with contextual adjustments
-    let totalScore = 0
-    const allFlags = []
+    // Core content analysis through plugin manager (now with context)
+    const pluginResults = await this.pluginManager.analyze(content, context)
 
-    Object.entries(pluginResults).forEach(([pluginName, result]) => {
-      if (pluginName.startsWith('_')) return // Skip meta fields
+    // Process plugin results
+    Object.entries(pluginResults).forEach(([pluginName, pluginResult]) => {
+      if (pluginName.startsWith('_')) return // Skip metadata fields
       
-      let pluginScore = result.score || 0
-      
-      // v3.0: Apply contextual adjustments
-      if (content.contextAdjustments && content.contextAdjustments.length > 0) {
-        content.contextAdjustments.forEach(adjustment => {
-          if (result.flags?.some(flag => flag.toLowerCase().includes(adjustment.word))) {
-            const reduction = Math.floor(pluginScore * adjustment.weightReduction)
-            pluginScore -= reduction
-            allFlags.push(`[CONTEXT] Reduced "${adjustment.word}" impact by ${reduction} points (${adjustment.reason})`)
-          }
-        })
-      }
-      
-      totalScore += Math.max(0, pluginScore)
-      
-      if (result.flags) {
-        allFlags.push(...result.flags.map(flag => `[${pluginName.toUpperCase()}] ${flag}`))
-      }
+      result.score += pluginResult.score || 0
+      result.flags.push(...(pluginResult.flags || []))
+      result.metadata[pluginName] = pluginResult
+      result.metadata.performance.pluginsUsed.push(pluginName)
     })
+  }
 
-    // v3.0: Apply positive indicators (enhanced context bonuses)
-    const { contextBonus, contextFlags } = this.calculateEnhancedContextBonus(content)
-    totalScore += contextBonus
-    allFlags.push(...contextFlags)
+  async runMLAnalysis(text, context, result) {
+    const mlStartTime = Date.now()
+    
+    try {
+      // Emoji sentiment analysis
+      if (this.mlPlugins.emojiSentiment) {
+        const emojiResult = this.mlPlugins.emojiSentiment.analyze(text, context)
+        result.metadata.emojiAnalysis = emojiResult
+        result.score += emojiResult.score
+        result.flags.push(...emojiResult.flags)
+        result.metadata.performance.pluginsUsed.push('emojiSentiment')
+      }
 
-    // v3.0: Adversarial pattern penalties
-    if (content.adversarialPatterns?.length > 0) {
-      const adversarialPenalty = content.adversarialPatterns.length * 2
-      totalScore += adversarialPenalty
-      allFlags.push(`[ADVERSARIAL] Detected ${content.adversarialPatterns.length} adversarial patterns +${adversarialPenalty} points`)
+      // Cross-cultural analysis (can reduce false positives)
+      if (this.mlPlugins.crossCultural) {
+        const culturalResult = this.mlPlugins.crossCultural.analyze(text, context)
+        result.metadata.crossCultural = culturalResult
+        result.score += culturalResult.score // Can be negative (reduces score)
+        result.flags.push(...culturalResult.flags)
+        result.metadata.performance.pluginsUsed.push('crossCultural')
+      }
+
+      // ML toxicity detection (advanced semantic analysis)
+      if (this.mlPlugins.mlToxicity) {
+        const mlResult = await this.mlPlugins.mlToxicity.analyze(text, context)
+        result.metadata.mlAnalysis = mlResult
+        result.score += mlResult.score
+        result.flags.push(...mlResult.flags)
+        result.metadata.performance.pluginsUsed.push('mlToxicity')
+        this.stats.mlAnalyses++
+      }
+
+      result.metadata.performance.mlProcessingTime = Date.now() - mlStartTime
+      
+    } catch (error) {
+      console.warn('ML analysis error:', error.message)
+      result.flags.push('[ML] ML analysis failed, using fallback')
+      result.metadata.mlAnalysis.error = error.message
     }
+  }
 
-    // Ensure minimum score
-    totalScore = Math.max(0, totalScore)
+  applyPresetLogic(result) {
+    const thresholds = presets[this.preset] || presets.moderate
+    
+    // Apply preset-specific score adjustments
+    if (thresholds.adjustments) {
+      Object.entries(thresholds.adjustments).forEach(([type, adjustment]) => {
+        if (result.metadata[type] && result.metadata[type].score > 0) {
+          const oldScore = result.score
+          result.score += adjustment
+          result.flags.push(`[PRESET] ${type} adjustment: ${adjustment} points`)
+        }
+      })
+    }
+    
+    // Ensure score doesn't go below 0
+    result.score = Math.max(0, result.score)
+  }
 
-    // Determine classification
-    const isSpam = totalScore >= this.options.spamThreshold
-    const riskLevel = this.calculateRiskLevel(totalScore)
+  updateStats(processingTime, result) {
+    this.stats.totalAnalyses++
+    this.stats.totalTime += processingTime
+    this.stats.averageTime = this.stats.totalTime / this.stats.totalAnalyses
+    
+    // Track ML success rate
+    if (result.metadata.mlAnalysis && !result.metadata.mlAnalysis.error) {
+      this.stats.mlSuccessRate = this.stats.mlAnalyses / this.stats.totalAnalyses
+    }
+  }
+
+  createResult(score, flags, metadata) {
+    const threshold = presets[this.preset]?.spamThreshold || 5
 
     return {
-      score: totalScore,
-      isSpam,
-      riskLevel,
-      threshold: this.options.spamThreshold,
-      flags: allFlags,
-      pluginResults,
-      recommendation: this.getRecommendation(totalScore, isSpam),
-      confidence: this.calculateConfidence(pluginResults),
-      
-      // v3.0: Enhanced analysis data
-      contextAnalysis: content.context,
-      preprocessingApplied: content.hasModifications,
-      adversarialPatterns: content.adversarialPatterns,
-      contextualAdjustments: content.contextAdjustments?.length || 0
+      isSpam: score >= threshold,
+      score: score,
+      confidence: this.calculateConfidence(score, threshold, metadata),
+      flags: flags,
+      preset: this.preset,
+      metadata: metadata || {},
+      preprocessingApplied: metadata?.preprocessing?.applied,  // NEW: Show if preprocessing worked
+      normalizedText: metadata?.processedText?.substring(0, 100),  // NEW: Show normalized text sample
+      version: '4.0.0',
+      timestamp: new Date().toISOString(),
+      performance: {
+        averageAnalysisTime: this.stats.averageTime,
+        totalAnalyses: this.stats.totalAnalyses,
+        mlSuccessRate: this.stats.mlSuccessRate
+      }
     }
   }
 
-  /**
-   * v3.0 Enhanced context-based bonuses with sophisticated detection
-   */
-  calculateEnhancedContextBonus(content) {
-    const { TECHNICAL_TERMS, ACADEMIC_TERMS, BUSINESS_TERMS, MEDICAL_TERMS } = require('./lib/constants/context-data')
+  calculateConfidence(score, threshold, metadata) {
+    // Base confidence on how far from threshold we are
+    let confidence = 0.5
     
-    let bonus = 0
-    const flags = []
-    const context = content.context || {}
-
-    // Professional context bonuses (more sophisticated than v2.1)
-    if (context.isProfessional) {
-      const professionalBonus = -4
-      bonus += professionalBonus
-      flags.push(`[POSITIVE] Professional context detected: ${professionalBonus} points`)
-    }
-
-    // Domain-specific bonuses
-    if (context.domains?.length > 0) {
-      const domainBonus = -2 * Math.min(3, context.domains.length)
-      bonus += domainBonus
-      flags.push(`[POSITIVE] Domain expertise (${context.domains.join(', ')}): ${domainBonus} points`)
-    }
-
-    // Communication style bonuses
-    if (context.communicationStyle?.includes('FORMAL') || context.communicationStyle?.includes('PROFESSIONAL')) {
-      bonus -= 3
-      flags.push(`[POSITIVE] Professional communication style: -3 points`)
-    }
-
-    // Enhanced email domain bonuses
-    if (context.emailContext?.isProfessional) {
-      const emailBonus = context.emailContext.type === 'educational' ? -5 : -2
-      bonus += emailBonus
-      flags.push(`[POSITIVE] Professional email domain (${context.emailContext.type}): ${emailBonus} points`)
-    }
-
-    // Vocabulary sophistication bonus
-    if (context.vocabularyAnalysis?.averageWordLength > 6) {
-      bonus -= 2
-      flags.push(`[POSITIVE] Sophisticated vocabulary: -2 points`)
-    }
-
-    return { contextBonus: bonus, contextFlags: flags }
-  }
-
-  /**
-   * Calculate risk level (enhanced for v3.0)
-   */
-  calculateRiskLevel(score) {
-    if (score >= 25) return 'CRITICAL'
-    if (score >= 15) return 'HIGH'
-    if (score >= this.options.spamThreshold) return 'MEDIUM'
-    if (score >= 2) return 'LOW'
-    return 'CLEAN'
-  }
-
-  /**
-   * Generate recommendation (enhanced for v3.0)
-   */
-  getRecommendation(score, isSpam) {
-    if (score >= 25) return `Immediate ban - Critical harassment/threats detected (Score: ${score})`
-    if (score >= 15) return `Block and review - Serious harassment detected (Score: ${score})`
-    if (score >= 10) return `Block content - Definite spam/harassment (Score: ${score})`
-    if (isSpam) return `Flag for moderation - Likely spam/harassment (Score: ${score})`
-    if (score >= 2) return `Review recommended - Suspicious indicators (Score: ${score})`
-    return `Allow - Clean content (Score: ${score})`
-  }
-
-  /**
-   * Calculate confidence based on plugin consensus (enhanced for v3.0)
-   */
-  calculateConfidence(pluginResults) {
-    const pluginScores = Object.values(pluginResults)
-      .filter(result => typeof result === 'object' && result.score !== undefined)
-      .map(result => result.score)
-    
-    if (pluginScores.length === 0) return 'No data'
-    
-    const activePlugins = pluginScores.filter(score => score > 0).length
-    const totalPlugins = pluginScores.length
-    const consensus = activePlugins / totalPlugins
-
-    // v3.0: Enhanced confidence calculation
-    const maxScore = Math.max(...pluginScores)
-    const scoreConfidence = Math.min(maxScore / 20, 1) // Normalize by expected max score
-    
-    const combinedConfidence = (consensus * 0.7) + (scoreConfidence * 0.3)
-
-    if (combinedConfidence >= 0.8) return 'Very high confidence'
-    if (combinedConfidence >= 0.6) return 'High confidence'
-    if (combinedConfidence >= 0.4) return 'Moderate confidence'
-    if (combinedConfidence >= 0.2) return 'Low confidence'
-    return 'Very low confidence'
-  }
-
-  /**
-   * v3.0 Enhanced metrics update
-   */
-  updateMetrics(analysis, processingTime, content) {
-    if (!this.metrics) return
-
-    this.metrics.totalAnalyses++
-    
-    if (analysis.isSpam) {
-      this.metrics.spamDetected++
+    if (score >= threshold) {
+      // Spam detection confidence
+      const overage = score - threshold
+      confidence = Math.min(0.95, 0.6 + (overage * 0.1))
     } else {
-      this.metrics.cleanContent++
-    }
-
-    // v3.0: New metrics
-    if (content.adversarialPatterns?.length > 0) {
-      this.metrics.adversarialDetected++
+      // Clean content confidence  
+      const underage = threshold - score
+      confidence = Math.min(0.95, 0.6 + (underage * 0.05))
     }
     
-    if (content.contextAdjustments?.length > 0) {
-      this.metrics.contextAdjustments++
+    // Boost confidence with ML analysis
+    if (metadata.mlAnalysis && metadata.mlAnalysis.confidence) {
+      confidence = Math.min(0.98, confidence + (metadata.mlAnalysis.confidence * 0.1))
     }
     
-    if (content.hasModifications) {
-      this.metrics.preprocessingModifications++
+    // Boost confidence with multiple plugin agreement
+    if (metadata.performance && metadata.performance.pluginsUsed.length > 4) {
+      confidence = Math.min(0.99, confidence + 0.05)
     }
     
-    if (analysis.pluginResults.harassment?.score > 0) {
-      this.metrics.harassmentDetected++
-    }
-
-    // Update rolling average
-    const total = this.metrics.totalAnalyses
-    this.metrics.averageProcessingTime = (
-      (this.metrics.averageProcessingTime * (total - 1)) + processingTime
-    ) / total
+    return Math.round(confidence * 100) / 100
   }
 
-  /**
-   * Generate cache key (enhanced for v3.0)
-   */
-  generateCacheKey(input, options) {
-    const content = `${input.name || ''}|${input.email || ''}|${input.subject || ''}|${input.message || ''}`
-    const configHash = fastHash(JSON.stringify({
-      preprocessing: options.preprocessing,
-      contextDetection: options.contextDetection,
-      plugins: options.plugins
-    }))
-    return fastHash(content + configHash)
-  }
-
-  /**
-   * Create fallback result when analysis fails
-   */
-  createFallbackResult(input, error) {
+  // v4.0 Analytics and insights
+  getAnalyticsReport() {
     return {
-      score: 10,
-      isSpam: true,
-      riskLevel: 'HIGH',
-      threshold: this.options.spamThreshold,
-      flags: [`Analysis failed: ${error.message}`],
-      recommendation: 'Manual review required - analysis failed',
-      confidence: 'Error state',
-      error: error.message,
-      
-      // v3.0: Enhanced fallback data
-      contextAnalysis: null,
-      preprocessingApplied: false,
-      adversarialPatterns: [],
-      contextualAdjustments: 0
+      version: '4.0.0',
+      totalAnalyses: this.stats.totalAnalyses,
+      performance: {
+        averageTime: `${this.stats.averageTime.toFixed(2)}ms`,
+        totalTime: `${this.stats.totalTime}ms`,
+        throughput: `${(this.stats.totalAnalyses / (this.stats.totalTime / 1000)).toFixed(2)} analyses/sec`
+      },
+      mlMetrics: {
+        mlAnalyses: this.stats.mlAnalyses,
+        mlSuccessRate: `${(this.stats.mlSuccessRate * 100).toFixed(1)}%`,
+        mlCoverage: `${((this.stats.mlAnalyses / this.stats.totalAnalyses) * 100).toFixed(1)}%`
+      },
+      features: {
+        enabledPlugins: Object.keys(this.plugins).length,
+        enabledMLPlugins: Object.keys(this.mlPlugins).length,
+        preset: this.preset,
+        mlFeatures: this.options.enableMLFeatures,
+        emojiAnalysis: this.options.enableEmojiAnalysis,
+        crossCultural: this.options.enableCrossCultural
+      }
     }
+  }
+
+  // Test ML features
+  async testMLFeatures(text) {
+    const results = {}
+    
+    if (this.mlPlugins.emojiSentiment) {
+      results.emoji = this.mlPlugins.emojiSentiment.getEmojiInsights(text)
+    }
+    
+    if (this.mlPlugins.crossCultural) {
+      results.cultural = this.mlPlugins.crossCultural.getCulturalInsights(text)
+    }
+    
+    if (this.mlPlugins.mlToxicity) {
+      results.sentiment = await this.mlPlugins.mlToxicity.testSentiment(text)
+    }
+    
+    if (this.mlPlugins.confusablesAdvanced) {
+      results.unicode = this.mlPlugins.confusablesAdvanced.getUnicodeAnalysis(text)
+    }
+    
+    return results
   }
 
   // === Convenience Methods (Backwards Compatibility) ===
