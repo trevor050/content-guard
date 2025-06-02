@@ -1,0 +1,36 @@
+{
+  "configuration": {
+    "neuralSemanticAggressiveness": 70,
+    "contextAwareAggressiveness": 15,
+    "behavioralAggressiveness": 0,
+    "adversarialAggressiveness": 5,
+    "ensembleAggressiveness": 0
+  },
+  "metrics": {
+    "accuracy": 74.85754985754986,
+    "falsePositiveRate": 0,
+    "falseNegativeRate": 8.831908831908832,
+    "averageProcessingTime": 1.274928774928775,
+    "totalCases": 1404,
+    "correct": 1051,
+    "incorrect": 353,
+    "primaryAccuracy": 61.73913043478261,
+    "secondaryAccuracy": 79.13125590179415,
+    "totalBenchmarkTime": 1821,
+    "configuration": {
+      "neuralSemanticAggressiveness": 70,
+      "contextAwareAggressiveness": 15,
+      "behavioralAggressiveness": 0,
+      "adversarialAggressiveness": 5,
+      "ensembleAggressiveness": 0
+    }
+  },
+  "score": 108.48290598290598,
+  "iteration": 98,
+  "timestamp": "2025-06-02T11:46:26.505Z",
+  "targetProgress": {
+    "accuracyAchieved": false,
+    "falsePositiveAchieved": true,
+    "processingTimeAchieved": true
+  }
+}

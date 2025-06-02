@@ -1,0 +1,7 @@
+{
+  "neuralSemanticAggressiveness": 70,
+  "contextAwareAggressiveness": 15,
+  "behavioralAggressiveness": 0,
+  "adversarialAggressiveness": 5,
+  "ensembleAggressiveness": 0
+}

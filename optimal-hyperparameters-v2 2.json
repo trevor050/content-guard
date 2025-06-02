@@ -1,0 +1,36 @@
+{
+  "tier1": {
+    "cleanThreshold": 0.1,
+    "spamThreshold": 8,
+    "uncertaintyMin": 0.5,
+    "uncertaintyMax": 7.5
+  },
+  "tier2": {
+    "confidenceThreshold": 0.75,
+    "sentimentThreshold": 0.65,
+    "semanticThreshold": 0.6,
+    "escalationThreshold": 0.7
+  },
+  "tier3": {
+    "ensembleThreshold": 0.8,
+    "modelWeights": {
+      "toxicity": 0.4,
+      "sentiment": 0.3,
+      "semantic": 0.3
+    }
+  },
+  "escalation": {
+    "conservative": {
+      "tier1_to_tier2": 0.85,
+      "tier2_to_tier3": 0.9
+    },
+    "balanced": {
+      "tier1_to_tier2": 0.75,
+      "tier2_to_tier3": 0.8
+    },
+    "aggressive": {
+      "tier1_to_tier2": 0.65,
+      "tier2_to_tier3": 0.7
+    }
+  }
+}

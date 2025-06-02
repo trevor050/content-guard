@@ -1,0 +1,83 @@
+{
+  "name": "content-guard",
+  "version": "1.0.2",
+  "description": "Advanced content analysis system with context-aware spam, toxicity, and harassment detection for modern applications",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "test": "node tests/test.js",
+    "test-cli": "node cli/test-runner.js",
+    "example": "node examples/basic-usage.js",
+    "lint": "echo 'Linting...' && node -c index.js",
+    "validate": "npm run lint && npm run test"
+  },
+  "keywords": [
+    "content-moderation",
+    "spam-filter",
+    "toxicity-detection",
+    "text-analysis",
+    "context-aware",
+    "harassment-detection",
+    "profanity-filter",
+    "sentiment-analysis",
+    "troll-detection",
+    "nlp",
+    "security",
+    "contact-form",
+    "user-content",
+    "comment-moderation",
+    "content-guard",
+    "ai-moderation"
+  ],
+  "author": {
+    "name": "ContentGuard Contributors",
+    "email": "contact@content-guard.dev"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trevor050/content-guard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/trevor050/content-guard/issues"
+  },
+  "homepage": "https://github.com/trevor050/content-guard#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "bad-words": "^3.0.4",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "compromise": "^14.14.4",
+    "cosine-similarity": "^1.0.1",
+    "email-validator": "^2.0.4",
+    "franc": "^6.2.0",
+    "inquirer": "^8.2.6",
+    "keyword-extractor": "^0.0.25",
+    "leven": "^3.1.0",
+    "lodash": "^4.17.21",
+    "lru-cache": "^10.4.3",
+    "natural": "^6.12.0",
+    "obscenity": "^0.4.3",
+    "ora": "^5.4.1",
+    "sentiment": "^5.0.2",
+    "string-similarity": "^4.0.4",
+    "text-moderate": "^1.0.7",
+    "validator": "^13.15.15"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/content-guard"
+  }
+}

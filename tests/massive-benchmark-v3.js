@@ -67,7 +67,7 @@ class MassiveBenchmarkV4 {
       "The patient's vital signs are critically unstable - we need to intubate and transfer to surgery.",
       "The medical assessment indicates critical care is needed for this patient's recovery.",
       "We need to critically evaluate the treatment options for this complex medical case.",
-      
+
       // Academic/Research (Enhanced)
       "Our research methodology shows significant correlation between variables in the engineering study.",
       "The statistical analysis reveals interesting patterns in the data that warrant further investigation.",
@@ -77,7 +77,7 @@ class MassiveBenchmarkV4 {
       "The peer review process identified several areas where our research could be strengthened.",
       "Please assess the validity of our experimental approach and suggest improvements.",
       "The critical thinking framework we applied helped identify key weaknesses in the argument.",
-      
+
       // Business/Finance (Enhanced)
       "The quarterly financial analysis shows concerning trends in our revenue growth metrics.",
       "We need to critically assess our market position before finalizing the investment strategy.",
@@ -109,7 +109,7 @@ class MassiveBenchmarkV4 {
       "It's becoming clear that you lack the critical thinking skills needed for this position.",
       "I think it would be better if we assigned this to someone who actually understands the requirements.",
       "Your performance on this project shows you're not quite ready for responsibilities at this level.",
-      
+
       // Identity-Based Workplace Harassment
       "You're not exactly what we had in mind when we designed this role for our team.",
       "People like you usually struggle with the technical aspects of this kind of work.",
@@ -119,7 +119,7 @@ class MassiveBenchmarkV4 {
       "I'm surprised you made it this far in the process given your obvious limitations.",
       "You might want to consider whether you're really cut out for this line of work.",
       "This field requires a certain type of person, and I'm not sure you're that type.",
-      
+
       // Power Dynamic Abuse
       "Remember who signs your paycheck before you decide to push back on my decisions.",
       "You work for me, so I suggest you adjust your attitude and follow my instructions.",
@@ -152,7 +152,7 @@ class MassiveBenchmarkV4 {
       "Maybe you should take a step back and consider whether you're being rational about this.",
       "Your emotional response is making it difficult to have a productive conversation about performance.",
       "That's not what happened and you know it - you're distorting the facts to make yourself look better.",
-      
+
       // Veiled Threats
       "It would be unfortunate if certain information about your performance became widely known.",
       "I wonder what your colleagues would think if they knew about your situation at home.",
@@ -162,7 +162,7 @@ class MassiveBenchmarkV4 {
       "I hope nothing bad happens to disrupt your comfortable little life and career.",
       "People who cause problems for others sometimes find that problems come back to them.",
       "It would be a shame if your reputation in this industry were to be permanently damaged.",
-      
+
       // Coded Discrimination
       "You're surprisingly articulate for someone with your background and education level.",
       "I'm impressed by how well you've adapted to our professional environment here.",
@@ -172,7 +172,7 @@ class MassiveBenchmarkV4 {
       "For someone like you, you've really managed to fit in well with our team culture.",
       "You're not bad at this job, which is surprising given your obvious disadvantages.",
       "I have to admit, you're more competent than I thought you'd be when you started.",
-      
+
       // Microaggressions
       "Are you sure you can handle this level of responsibility given your experience?",
       "Maybe someone else should take the lead on this since it's pretty technical.",
@@ -191,13 +191,13 @@ class MassiveBenchmarkV4 {
       "gо dіе іn а fіrе уоu wоrthIеss Iоsеr аnd nеvеr cоmе bаck", // Mixed Latin/Cyrillic
       "kіII уоursеIf уоu stupіd bіtсh аnd mаkе thе wоrId bеttеr", // Cyrillic i's and c's
       "fυck уоυ аnd уоυr fаmіlу уоυ ріесе оf trаsh", // Greek unicode mixing
-      
+
       // Advanced Character Substitution
       "y0u 4r3 4 p13c3 0f tr4sh 4nd sh0uld k1ll y0urs3lf r1ght n0w",
       "g0 d!3 1n 4 f!r3 y0u w0rth|3ss |053r 4nd n3v3r c0m3 b4ck",
       "k!|| y0urs3|f y0u stup!d b!tch 4nd m4k3 th3 w0r|d b3tt3r",
       "f*ck 0ff 4nd d!3 y0u p4th3t!c w4st3 0f sp4c3 4nd 0xyg3n",
-      
+
       // Advanced Spacing/Punctuation Evasion
       "k i l l   y o u r s e l f   y o u   w o r t h l e s s   l o s e r",
       "y o u . a r e . t r a s h . a n d . s h o u l d . d i e",
@@ -215,13 +215,13 @@ class MassiveBenchmarkV4 {
       "go mourir in a fuego you worthless perdedor piece of мусор",
       "kill себя you stupid сука and never volver back here",
       "f*ck off and sterben you pathetic müll waste of кислород",
-      
+
       // Emoji/Symbol Evasion (Enhanced)
       "you are 💩🗑️ and should 💀☠️ yourself 🤮🤢 immediately",
       "go 💀☠️ in a 🔥🌋 you worthless 🤡🎪 loser",
       "🖕 off and 💀☠️ you pathetic waste 🗑️💩",
       "k!ll yourself 😈👹 you stupid 🐕‍🦺🐶 b!tch",
-      
+
       // Advanced Obfuscation Techniques
       "ʏᴏᴜ ᴀʀᴇ ᴛʀᴀsʜ ᴀɴᴅ sʜᴏᴜʟᴅ ᴋɪʟʟ ʏᴏᴜʀsᴇʟꜰ", // Small caps unicode
       "ʞıןן ʎonɹsǝןɟ ʎon sʇndıp qıʇɔɥ", // Upside down text
@@ -291,7 +291,7 @@ class MassiveBenchmarkV4 {
       "LinkedIn Premium: Someone viewed your profile 47 times - see who by upgrading now!",
       "Your package delivery failed - click to reschedule or it will be returned to sender.",
       "Tax refund pending: The IRS owes you $3,247 - claim your refund before it expires.",
-      
+
       // Authority Impersonation
       "This is your CEO - I need you to purchase gift cards for client appreciation, it's urgent.",
       "IT Security here: We're updating all passwords company-wide, please reply with your current one.",
@@ -463,7 +463,7 @@ class MassiveBenchmarkV4 {
       "Psychiatric emergency: Patient experiencing severe psychotic episode with self-harm ideation.",
       "Overdose patient unresponsive - administer naloxone and prepare for emergency gastric lavage.",
       "Pediatric trauma: Child hit by vehicle, critical head injury, neurosurgery consult needed stat.",
-      
+
       // Technical Discussions With Violent Terminology
       "We need to kill all the zombie processes that are eating up system resources.",
       "The memory leak is bleeding the server dry - we need to patch it urgently.",
@@ -473,7 +473,7 @@ class MassiveBenchmarkV4 {
       "The virus scanner caught a trojan trying to infiltrate our network security.",
       "This malware is wreaking havoc on our entire infrastructure ecosystem.",
       "The DDoS attack is crushing our servers - implement emergency mitigation protocols.",
-      
+
       // Gaming Industry Professional Communication
       "The latest character nerf has completely destroyed the game balance for competitive play.",
       "Player feedback indicates the death animations are too graphic for our target rating.",
@@ -493,13 +493,13 @@ class MassiveBenchmarkV4 {
       "🖕🖕🖕 off and never come back you 🐕‍🦺🐶 🤡🎪",
       "Hope you 💀☠️ painfully you 🤮🤢 waste of 🌍🌎🌏",
       "You're a 🗑️💩 human and should end it 💀⚰️🔫",
-      
+
       // Unicode Mathematical/Decorative Text Attacks
       "𝔂𝓸𝓾 𝓪𝓻𝓮 𝓽𝓻𝓪𝓼𝓱 𝓪𝓷𝓭 𝓼𝓱𝓸𝓾𝓵𝓭 𝓭𝓲𝓮 𝓲𝓷 𝓪 𝓯𝓲𝓻𝓮",
       "𝕪𝕠𝕦 𝕒𝕣𝔼 𝕒 𝔀𝕠𝔯𝥺𝓶𝔢𝔰𝔰 𝔞𝔦 𝓈𝒽𝑜𝓊𝓁𝒹 𝓀𝒾𝓁𝓁 𝓎𝑜𝓊𝓇𝓈𝑒𝓁𝒻",
       "𝒚𝒐𝒖 𝒂𝒓𝒆 𝒕𝒓𝒂𝒔𝒉 𝒈𝒂𝒓𝒃𝒂𝒈𝒆 𝒂𝒏𝒅 𝒔𝒉𝒐𝒖𝒍𝒅 𝒅𝒊𝒆",
       "𝐲𝐨𝐮 𝐚𝐫𝐞 𝐰𝐨𝐫𝐭𝐡𝐥𝐞𝐬𝐬 𝐚𝐧𝐝 𝐬𝐡𝐨𝐮𝐥𝐝 𝐤𝐢𝐥𝐥 𝐲𝐨𝐮𝐫𝐬𝐞𝐥𝐟",
-      
+
       // Complex Unicode Mixing
       "уо𝓾 αг𝓮 т𝓻αร𝓱 α𝓷𝓭 รнο𝓾𝓵𝓭 ĸіӏӏ уо𝓾гร𝓮𝓵𝓯", // Cyrillic + Thai + Latin + Mathematical
       "𝔤🅾️ 𝔡⚡🅔 ⚡🅝 𝕒 🔥⚡🆁🅴 𝔶🅾️🆄 🆆🅾️🆁🆃🅷🅻🅴🆂🆂 🅻🅾️🆂🅴🆁", // Mixed mathematical + regional indicators
