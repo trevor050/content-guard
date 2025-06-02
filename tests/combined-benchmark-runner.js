@@ -28,7 +28,6 @@ const { MassiveBenchmarkV4 } = require('./massive-benchmark-v3.js')
 const { ContentGuardV4Fast } = require('../lib/variants/v4-fast.js')
 const { ContentGuardV4Balanced } = require('../lib/variants/v4-balanced.js')
 const ContentGuardV4Large = require('../lib/variants/v4-large.js')
-const ContentGuardV4LargeOptimized = require('../lib/variants/v4-large-optimized.js')
 const { ContentGuardV4Turbo } = require('../lib/variants/v4-turbo.js')
 
 class CombinedBenchmarkRunner {
@@ -66,8 +65,7 @@ class CombinedBenchmarkRunner {
           linguisticFingerprinting: 35.88541648014674,
           crossCultural: 11.705793103891548
         }
-      },
-      'v4.5-large-optimized': { type: 'variant', variant: 'large-optimized', debug: false, enableCaching: false }
+      }
     }
     
     // Parse command line arguments
