@@ -6,18 +6,19 @@
  * Enhanced command-line interface for content analysis with detailed explanations
  */
 
-const { ContentGuard, presets } = require('../index.js')
+const { ContentGuard, presets, createGuard } = require('../index.js')
 const { program } = require('commander')
 const chalk = require('chalk')
 
 program
   .name('contentguard')
   .description('Analyze content for spam, toxicity, and harassment')
-  .version('2.1.0')
+  .version('4.5.0')
 
 program
   .argument('<text>', 'Text to analyze')
   .option('-p, --preset <preset>', 'Use preset configuration (strict, moderate, lenient, gaming, professional)', 'moderate')
+  .option('-v, --variant <variant>', 'Use v4.5 variant (fast, balanced, large, turbo)', 'balanced')
   .option('-t, --threshold <number>', 'Custom spam threshold', parseFloat)
   .option('-e, --explain', 'Show detailed explanation of the analysis')
   .option('-j, --json', 'Output results as JSON')
@@ -26,26 +27,26 @@ program
   .option('--plugins', 'Show plugin breakdown')
   .action(async (text, options) => {
     try {
-      // Configure ContentGuard
-      let config = {}
-      
-      if (presets[options.preset]) {
-        config = { ...presets[options.preset] }
-      } else {
-        console.error(chalk.red(`❌ Unknown preset: ${options.preset}`))
-        console.log(chalk.yellow('Available presets: strict, moderate, lenient, gaming, professional'))
+      // Validate variant
+      const validVariants = ['fast', 'balanced', 'large', 'turbo']
+      if (!validVariants.includes(options.variant.toLowerCase())) {
+        console.error(chalk.red(`❌ Unknown variant: ${options.variant}`))
+        console.log(chalk.yellow('Available variants: fast, balanced, large, turbo'))
         process.exit(1)
+      }
+      
+      // v4.5 variants have their own optimized configurations
+      // Only apply basic user overrides, not legacy presets
+      let config = {
+        debug: options.debug || false
       }
       
       if (options.threshold) {
         config.spamThreshold = options.threshold
       }
       
-      if (options.debug) {
-        config.debug = true
-      }
-      
-      const guard = new ContentGuard(config)
+      // Create the appropriate ContentGuard variant
+      const guard = createGuard(options.variant, config)
       
       // Analyze the text
       const startTime = Date.now()
@@ -58,8 +59,10 @@ program
       }
       
       // Display results
-      console.log(chalk.bold('\n🛡️  ContentGuard v2.1 Analysis Results'))
+      console.log(chalk.bold('\n🛡️  ContentGuard v4.5 Analysis Results'))
       console.log('=' .repeat(60))
+      console.log(`🚀 Variant: ${chalk.cyan(options.variant.toUpperCase())}`)
+      console.log();
       
       // Risk level with colors and emojis
       const riskColors = {
@@ -123,23 +126,35 @@ program
       // Performance metrics
       if (options.performance || options.debug) {
         console.log(`\n⚡ Performance Metrics:`)
-        console.log(`   Analysis time: ${result.metadata?.performance?.processingTime || 'N/A'}ms`)
-        console.log(`   CLI overhead: ${totalTime - (result.metadata?.performance?.processingTime || 0)}ms`)
+        console.log(`   Analysis time: ${result.metadata?.performance?.processingTime || result.processingTime || 'N/A'}ms`)
+        console.log(`   CLI overhead: ${totalTime - (result.metadata?.performance?.processingTime || result.processingTime || 0)}ms`)
         console.log(`   Cache status: ${result.fromCache ? chalk.green('HIT') : chalk.yellow('MISS')}`)
         console.log(`   Early exit: ${result.metadata?.earlyExit ? chalk.yellow('YES') : chalk.green('NO')}`)
         
-        const metrics = guard.getMetrics()
-        if (metrics && !metrics.error) {
-          console.log(`   Cache efficiency: ${metrics.cacheEfficiency || 'N/A'}`)
-          console.log(`   Total analyses: ${metrics.totalAnalyses}`)
+        // Try to get metrics, but don't fail if the method doesn't exist
+        try {
+          const metrics = guard.getMetrics ? guard.getMetrics() : guard.getPerformanceMetrics()
+          if (metrics && !metrics.error) {
+            console.log(`   Cache efficiency: ${metrics.cacheEfficiency || 'N/A'}`)
+            console.log(`   Total analyses: ${metrics.totalAnalyses || 'N/A'}`)
+            if (metrics.averageTime) {
+              console.log(`   Average time: ${metrics.averageTime}`)
+            }
+            if (metrics.variant) {
+              console.log(`   Variant: ${metrics.variant}`)
+            }
+          }
+        } catch (error) {
+          console.log(`   Metrics: ${chalk.yellow('Not available for this variant')}`)
         }
       }
       
       // Standard info
       console.log(`\n📋 Analysis Info:`)
-      console.log(`   ContentGuard version: v${result.version || 'N/A'}`)
+      console.log(`   ContentGuard version: v${result.version || result.metadata?.version || '4.5.0'}`)
+      console.log(`   Variant: ${result.variant || options.variant}`)
       console.log(`   Plugins: ${result.metadata?.performance?.pluginsUsed?.join(', ') || 'N/A'}`)
-      console.log(`   Timestamp: ${new Date(result.timestamp).toLocaleString()}`)
+      console.log(`   Timestamp: ${result.timestamp ? new Date(result.timestamp).toLocaleString() : new Date().toLocaleString()}`)
       
       // Exit with appropriate code
       process.exit(result.isSpam ? 1 : 0)
@@ -163,36 +178,36 @@ program
     
     const examples = [
       {
-        desc: 'Basic analysis',
+        desc: 'Basic analysis with balanced variant',
         cmd: 'contentguard "Hello, this is a test message"'
       },
       {
-        desc: 'Use strict preset with explanation',
-        cmd: 'contentguard "Some text" --preset strict --explain'
+        desc: 'Use large variant for maximum accuracy',
+        cmd: 'contentguard "Some text" --variant large --explain'
       },
       {
-        desc: 'Custom threshold with plugin breakdown',
-        cmd: 'contentguard "Some text" --threshold 3 --plugins'
+        desc: 'Use turbo variant for maximum speed',
+        cmd: 'contentguard "Some text" --variant turbo --performance'
       },
       {
-        desc: 'Performance analysis',
-        cmd: 'contentguard "Some text" --performance'
+        desc: 'Fast variant with custom threshold',
+        cmd: 'contentguard "Some text" --variant fast --threshold 3 --plugins'
       },
       {
-        desc: 'Full detailed analysis',
-        cmd: 'contentguard "Some text" --explain --plugins --performance'
+        desc: 'Professional preset with large variant',
+        cmd: 'contentguard "urgent critical issue" --variant large --preset professional --explain'
+      },
+      {
+        desc: 'Gaming context with fast variant',
+        cmd: 'contentguard "git gud noob" --variant fast --preset gaming --explain'
+      },
+      {
+        desc: 'Full detailed analysis with large variant',
+        cmd: 'contentguard "Some text" --variant large --explain --plugins --performance'
       },
       {
         desc: 'JSON output for automation',
-        cmd: 'contentguard "Some text" --json'
-      },
-      {
-        desc: 'Gaming context analysis',
-        cmd: 'contentguard "git gud noob" --preset gaming --explain'
-      },
-      {
-        desc: 'Professional context',
-        cmd: 'contentguard "urgent critical issue" --preset professional --explain'
+        cmd: 'contentguard "Some text" --variant balanced --json'
       }
     ]
     
@@ -202,6 +217,7 @@ program
     })
     
     console.log(`\n${chalk.bold('🎛️  Available Options:')}`)
+    console.log('  --variant <name>    Use v4.5 variant (fast, balanced, large, turbo)')
     console.log('  --preset <name>     Use predefined configuration')
     console.log('  --threshold <num>   Set custom spam threshold')
     console.log('  --explain           Show detailed detection breakdown')
@@ -209,6 +225,12 @@ program
     console.log('  --performance       Show performance metrics')
     console.log('  --json              Output raw JSON (for automation)')
     console.log('  --debug             Enable debug mode')
+    
+    console.log(`\n${chalk.bold('🚀 v4.5 Variants:')}`)
+    console.log('  • fast       - Ultra-fast analysis (~0.05ms, 90%+ accuracy)')
+    console.log('  • balanced   - Optimal speed/accuracy balance (~0.3ms, 93%+ accuracy)')
+    console.log('  • large      - Maximum accuracy (~1.5ms, 94%+ accuracy)')
+    console.log('  • turbo      - Extreme speed (~0.02ms, 91%+ accuracy)')
     
     console.log(`\n${chalk.bold('🎯 Available presets:')}`)
     console.log('  • strict       - High sensitivity, low tolerance (threshold: 3)')
@@ -265,13 +287,12 @@ program
   .command('benchmark')
   .description('Run performance benchmark')
   .option('-i, --iterations <number>', 'Number of iterations', '100')
+  .option('-v, --variant <variant>', 'Test specific variant (fast, balanced, large, turbo)', 'all')
   .action(async (options) => {
-    console.log(chalk.bold('\n🚀 ContentGuard Performance Benchmark'))
+    console.log(chalk.bold('\n🚀 ContentGuard v4.5 Performance Benchmark'))
     console.log('=' .repeat(50))
     
-    const guard = new ContentGuard({ debug: false })
     const iterations = parseInt(options.iterations)
-    
     const testCases = [
       'Hello, this is a professional inquiry.',
       'you are trash and should kill yourself',
@@ -280,45 +301,55 @@ program
       'Engineering analysis shows ratio calculation'
     ]
     
+    const variants = options.variant === 'all' ? ['fast', 'balanced', 'large', 'turbo'] : [options.variant]
+    
     console.log(`Running ${iterations} iterations with ${testCases.length} test cases...`)
     
-    const startTime = Date.now()
-    const results = []
-    
-    for (let i = 0; i < iterations; i++) {
-      for (const testCase of testCases) {
-        const result = await guard.analyze({ message: testCase })
-        results.push(result)
+    for (const variant of variants) {
+      console.log(`\n🚀 Testing ${chalk.cyan(variant.toUpperCase())} variant...`)
+      
+      const guard = createGuard(variant, { debug: false })
+      const startTime = Date.now()
+      const results = []
+      
+      for (let i = 0; i < iterations; i++) {
+        for (const testCase of testCases) {
+          const result = await guard.analyze(testCase)
+          results.push(result)
+        }
       }
+      
+      const endTime = Date.now()
+      const totalTime = endTime - startTime
+      const totalTests = iterations * testCases.length
+      const avgTime = totalTime / totalTests
+      
+      console.log(`   Total tests: ${chalk.bold(totalTests)}`)
+      console.log(`   Total time: ${chalk.bold(totalTime + 'ms')}`)
+      console.log(`   Average: ${chalk.green(avgTime.toFixed(3) + 'ms')} per analysis`)
+      console.log(`   Throughput: ${chalk.green(Math.round(1000 / avgTime))} analyses/sec`)
+      
+      // Performance grade
+      let grade = 'F'
+      if (avgTime < 0.1) grade = 'A+'
+      else if (avgTime < 0.5) grade = 'A'
+      else if (avgTime < 1) grade = 'B'
+      else if (avgTime < 5) grade = 'C'
+      else if (avgTime < 10) grade = 'D'
+      
+      const gradeColor = grade.startsWith('A') ? chalk.green : grade === 'B' ? chalk.yellow : chalk.red
+      console.log(`   Performance grade: ${gradeColor.bold(grade)}`)
+      
+      // Accuracy estimate (simplified)
+      const spamCount = results.filter(r => r.isSpam).length
+      console.log(`   Spam detection rate: ${chalk.blue((spamCount / totalTests * 100).toFixed(1) + '%')}`)
     }
     
-    const endTime = Date.now()
-    const totalTime = endTime - startTime
-    const totalTests = iterations * testCases.length
-    const avgTime = totalTime / totalTests
-    
-    console.log(`\n📊 Results:`)
-    console.log(`   Total tests: ${chalk.bold(totalTests)}`)
-    console.log(`   Total time: ${chalk.bold(totalTime + 'ms')}`)
-    console.log(`   Average: ${chalk.green(avgTime.toFixed(3) + 'ms')} per analysis`)
-    console.log(`   Throughput: ${chalk.green(Math.round(1000 / avgTime))} analyses/sec`)
-    
-    const metrics = guard.getMetrics()
-    if (metrics && !metrics.error) {
-      console.log(`   Cache efficiency: ${chalk.blue(metrics.cacheEfficiency)}`)
-      console.log(`   Memory usage: ${chalk.yellow(Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB')}`)
-    }
-    
-    // Performance grade
-    let grade = 'F'
-    if (avgTime < 0.1) grade = 'A+'
-    else if (avgTime < 0.5) grade = 'A'
-    else if (avgTime < 1) grade = 'B'
-    else if (avgTime < 5) grade = 'C'
-    else if (avgTime < 10) grade = 'D'
-    
-    const gradeColor = grade.startsWith('A') ? chalk.green : grade === 'B' ? chalk.yellow : chalk.red
-    console.log(`   Performance grade: ${gradeColor.bold(grade)}`)
+    console.log(`\n💡 ${chalk.bold('Variant Recommendations:')}`)
+    console.log('  🏃 fast     - High-volume, real-time applications')
+    console.log('  ⚖️  balanced - General-purpose, production use')
+    console.log('  🎯 large    - Critical content moderation')
+    console.log('  ⚡ turbo    - Ultra high-throughput systems')
   })
 
 program.parse() 

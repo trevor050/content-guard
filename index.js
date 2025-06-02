@@ -4,7 +4,7 @@
  * Revolutionary content analysis with sophisticated harassment detection,
  * advanced context awareness, and adversarial attack resistance.
  * 
- * @author ContentGuard Contributors
+ * @author trevor050
  * @license MIT
  * @version 3.0.0
  */
@@ -826,7 +826,7 @@ class ContentGuard {
       metadata: metadata || {},
       preprocessingApplied: metadata?.preprocessing?.applied,  // NEW: Show if preprocessing worked
       normalizedText: metadata?.processedText?.substring(0, 100),  // NEW: Show normalized text sample
-      version: '4.0.0',
+      version: '4.5.0',
       timestamp: new Date().toISOString(),
       performance: {
         averageAnalysisTime: this.stats.averageTime,
@@ -866,7 +866,7 @@ class ContentGuard {
   // v4.0 Analytics and insights
   getAnalyticsReport() {
     return {
-      version: '4.0.0',
+      version: '4.5.0',
       totalAnalyses: this.stats.totalAnalyses,
       performance: {
         averageTime: `${this.stats.averageTime.toFixed(2)}ms`,
@@ -996,11 +996,28 @@ class ContentGuard {
 module.exports = {
   ContentGuard,
   
+  // v4.5 Variants - New high-performance models
+  ContentGuardV4Fast: require('./lib/variants/v4-fast').ContentGuardV4Fast,
+  ContentGuardV4Balanced: require('./lib/variants/v4-balanced').ContentGuardV4Balanced,
+  ContentGuardV4Large: require('./lib/variants/v4-large'),
+  ContentGuardV4Turbo: require('./lib/variants/v4-turbo').ContentGuardV4Turbo,
+  
   // Backwards compatibility
   UltimateAntiTroll: ContentGuard,
   
   // Convenience factory
   createFilter: (options = {}) => new ContentGuard(options),
+  
+  // v4.5 Variant factory
+  createGuard: (variant = 'balanced', options = {}) => {
+    switch(variant.toLowerCase()) {
+      case 'fast': return new (require('./lib/variants/v4-fast').ContentGuardV4Fast)(options)
+      case 'balanced': return new (require('./lib/variants/v4-balanced').ContentGuardV4Balanced)(options)
+      case 'large': return new (require('./lib/variants/v4-large'))(options)
+      case 'turbo': return new (require('./lib/variants/v4-turbo').ContentGuardV4Turbo)(options)
+      default: return new (require('./lib/variants/v4-balanced').ContentGuardV4Balanced)(options)
+    }
+  },
   
   // Plugin system exports
   PluginManager: require('./lib/core/plugin-manager'),

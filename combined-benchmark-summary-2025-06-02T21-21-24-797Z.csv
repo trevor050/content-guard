@@ -1,0 +1,6 @@
+Model,Accuracy,False Positive Rate,False Negative Rate,Average Time (ms),Total Cases,Correct,Incorrect
+v4.0-base,88.46,5.20,6.34,0.21,1404,1242,162
+v4.5-fast,90.10,1.21,8.69,0.06,1404,1265,139
+v4.5-balanced,93.30,1.50,5.20,0.25,1404,1310,94
+v4.5-large,94.02,1.92,4.06,1.32,1404,1320,84
+v4.5-turbo,91.03,1.21,7.76,0.02,1404,1278,126
