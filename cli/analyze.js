@@ -81,29 +81,31 @@ program
       const riskColor = riskColors[result.riskLevel] || chalk.white
       const riskEmoji = riskEmojis[result.riskLevel] || '❓'
       
-      console.log(`📊 Score: ${chalk.bold(result.score)} / ${result.threshold}`)
-      console.log(`${riskEmoji} Risk Level: ${riskColor(result.riskLevel)}`)
+      console.log(`📊 Score: ${chalk.bold(result.score)} / ${result.preset?.spamThreshold || 'N/A'}`)
+      console.log(`${riskEmoji} Risk Level: ${riskColor(result.riskLevel || 'UNKNOWN')}`)
       console.log(`🎯 Classification: ${result.isSpam ? chalk.red('SPAM') : chalk.green('CLEAN')}`)
       console.log(`🤖 Confidence: ${result.confidence}`)
-      console.log(`💡 Recommendation: ${result.recommendation}`)
+      console.log(`💡 Recommendation: ${result.recommendation || (result.isSpam ? 'Content may be inappropriate' : 'Content appears safe')}`)
       
       // Plugin breakdown
       if (options.plugins || options.explain) {
         console.log(`\n🔌 Plugin Breakdown:`)
-        Object.entries(result.pluginResults).forEach(([pluginName, pluginResult]) => {
-          if (pluginName.startsWith('_')) return // Skip meta fields
-          
-          const score = pluginResult.score || 0
-          const scoreColor = score === 0 ? chalk.green : score < 5 ? chalk.yellow : chalk.red
-          
-          console.log(`   ${pluginName.toUpperCase()}: ${scoreColor(score + ' points')}`)
-          
-          if (pluginResult.flags && pluginResult.flags.length > 0 && options.explain) {
-            pluginResult.flags.forEach(flag => {
-              console.log(`     • ${chalk.gray(flag)}`)
-            })
-          }
-        })
+        if (result.metadata) {
+          Object.entries(result.metadata).forEach(([pluginName, pluginResult]) => {
+            if (pluginName.startsWith('_') || !pluginResult || typeof pluginResult !== 'object' || !pluginResult.score === undefined) return // Skip meta fields
+            
+            const score = pluginResult.score || 0
+            const scoreColor = score === 0 ? chalk.green : score < 5 ? chalk.yellow : chalk.red
+            
+            console.log(`   ${pluginName.toUpperCase()}: ${scoreColor(score + ' points')}`)
+            
+            if (pluginResult.flags && pluginResult.flags.length > 0 && options.explain) {
+              pluginResult.flags.forEach(flag => {
+                console.log(`     • ${chalk.gray(flag)}`)
+              })
+            }
+          })
+        }
       }
       
       // Detailed explanation
@@ -121,23 +123,23 @@ program
       // Performance metrics
       if (options.performance || options.debug) {
         console.log(`\n⚡ Performance Metrics:`)
-        console.log(`   Analysis time: ${result.metadata.processingTime}ms`)
-        console.log(`   CLI overhead: ${totalTime - result.metadata.processingTime}ms`)
+        console.log(`   Analysis time: ${result.metadata?.performance?.processingTime || 'N/A'}ms`)
+        console.log(`   CLI overhead: ${totalTime - (result.metadata?.performance?.processingTime || 0)}ms`)
         console.log(`   Cache status: ${result.fromCache ? chalk.green('HIT') : chalk.yellow('MISS')}`)
-        console.log(`   Early exit: ${result.metadata.earlyExit ? chalk.yellow('YES') : chalk.green('NO')}`)
+        console.log(`   Early exit: ${result.metadata?.earlyExit ? chalk.yellow('YES') : chalk.green('NO')}`)
         
         const metrics = guard.getMetrics()
         if (metrics && !metrics.error) {
-          console.log(`   Cache efficiency: ${metrics.cacheEfficiency}`)
+          console.log(`   Cache efficiency: ${metrics.cacheEfficiency || 'N/A'}`)
           console.log(`   Total analyses: ${metrics.totalAnalyses}`)
         }
       }
       
       // Standard info
       console.log(`\n📋 Analysis Info:`)
-      console.log(`   ContentGuard version: v${result.metadata.version}`)
-      console.log(`   Plugins: ${result.metadata.enabledPlugins.join(', ')}`)
-      console.log(`   Timestamp: ${new Date(result.metadata.timestamp).toLocaleString()}`)
+      console.log(`   ContentGuard version: v${result.version || 'N/A'}`)
+      console.log(`   Plugins: ${result.metadata?.performance?.pluginsUsed?.join(', ') || 'N/A'}`)
+      console.log(`   Timestamp: ${new Date(result.timestamp).toLocaleString()}`)
       
       // Exit with appropriate code
       process.exit(result.isSpam ? 1 : 0)
