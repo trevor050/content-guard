@@ -9,11 +9,12 @@
  * 
  * Against all model variants:
  * - v4.0 Base
- * - v4.5-fast
- * - v4.5-balanced
- * - v4.5-turbo
- * - v4.5-large
- * 
+ * - v4.7-fast
+ * - v4.7-balanced
+ * - v4.7-turbo
+ * - v4.7-large
+ * - v4.7-ultra
+ *
  * Provides comparative analysis and combined results
  */
 
@@ -28,7 +29,7 @@ const { MassiveBenchmarkV4 } = require('./massive-benchmark-v3.js')
 // dependency loading when only specific models are tested. Some variants rely
 // on optional packages that may not be installed in every environment. By
 // deferring the require() calls we allow running a subset of models (for
-// example only v4.5-turbo) without triggering missing-module errors.
+// example only v4.7-turbo) without triggering missing-module errors.
 
 class CombinedBenchmarkRunner {
   constructor() {
@@ -51,10 +52,10 @@ class CombinedBenchmarkRunner {
     // tests it out of the box even if no --versions flag is supplied.
     this.defaultModels = {
       'v4.0-base': { type: 'base', debug: false, enableCaching: false },
-      'v4.5-fast': { type: 'variant', variant: 'fast', debug: false, enableCaching: false },
-      'v4.5-balanced': { type: 'variant', variant: 'balanced', debug: false, enableCaching: false },
-      'v4.5-turbo': { type: 'variant', variant: 'turbo', debug: false, enableCaching: false },
-      'v4.5-large': {
+      'v4.7-fast': { type: 'variant', variant: 'fast', debug: false, enableCaching: false },
+      'v4.7-balanced': { type: 'variant', variant: 'balanced', debug: false, enableCaching: false },
+      'v4.7-turbo': { type: 'variant', variant: 'turbo', debug: false, enableCaching: false },
+      'v4.7-large': {
         type: 'variant',
         variant: 'large',
         debug: false,
@@ -67,7 +68,8 @@ class CombinedBenchmarkRunner {
           linguisticFingerprinting: 35.88541648014674,
           crossCultural: 11.705793103891548
         }
-      }
+      },
+      'v4.7-ultra': { type: 'variant', variant: 'ultra', debug: false, enableCaching: false }
     }
 
     // Start with the full default set. This ensures turbo is always part of the
@@ -99,7 +101,7 @@ class CombinedBenchmarkRunner {
       }
     }
     
-    // Parse specific versions to test (--versions v4.0-base,v4.5-large,v2.1-legacy)
+    // Parse specific versions to test (--versions v4.0-base,v4.7-large,v2.1-legacy)
     const versionsIndex = process.argv.findIndex(arg => arg === '--versions')
     if (versionsIndex !== -1 && versionsIndex + 1 < process.argv.length) {
       const requestedVersions = process.argv[versionsIndex + 1].split(',').map(v => v.trim())
@@ -309,7 +311,7 @@ class CombinedBenchmarkRunner {
         throw error
       }
     } else if (modelConfig.type === 'variant') {
-      // For v4.5 variants, use the correct variant class
+      // For v4.7 variants, use the correct variant class
       const variantOptions = { 
         debug: modelConfig.debug, 
         enableCaching: modelConfig.enableCaching,
@@ -345,6 +347,11 @@ class CombinedBenchmarkRunner {
         case 'turbo': {
           const { ContentGuardV4Turbo } = require('../lib/variants/v4-turbo.js')
           guard = new ContentGuardV4Turbo(variantOptions)
+          break
+        }
+        case 'ultra': {
+          const { ContentGuardV47Ultra } = require('../lib/variants/v4-ultra.js')
+          guard = new ContentGuardV47Ultra(variantOptions)
           break
         }
         default:
@@ -808,7 +815,7 @@ class CombinedBenchmarkRunner {
       console.log('')
       console.log('   Model Selection:')
       console.log('     --versions model1,model2: Test specific versions only')
-      console.log('       (e.g., --versions v4.0-base,v4.5-large,v2.1-legacy)')
+      console.log('       (e.g., --versions v4.0-base,v4.7-large,v2.1-legacy)')
       console.log('     --full (-f): Include all legacy versions (v3.0, v2.1, v1.02)')
       console.log('       Turbo is always included by default when no versions are specified')
       console.log('')
@@ -817,7 +824,7 @@ class CombinedBenchmarkRunner {
       console.log('')
       console.log('   Examples:')
       console.log('     node combined-benchmark-runner.js --weighted --failures --examples 5')
-      console.log('     node combined-benchmark-runner.js --versions v4.5-large,v4.0-base --detailed')
+      console.log('     node combined-benchmark-runner.js --versions v4.7-large,v4.0-base --detailed')
       console.log('     node combined-benchmark-runner.js --full --weighted --category-matrix')
     }
   }
@@ -992,7 +999,7 @@ class CombinedBenchmarkRunner {
     console.log('=' .repeat(150))
     
     // Show detailed header
-    console.log('Category                    | v4.0-base | v4.5-fast | v4.5-balanced | v4.5-turbo | v4.5-large | Worst Issue')
+    console.log('Category                    | v4.0-base | v4.7-fast | v4.7-balanced | v4.7-turbo | v4.7-large | Worst Issue')
     console.log('-'.repeat(150))
     
     allCategories.forEach(([categoryName, categoryStats]) => {

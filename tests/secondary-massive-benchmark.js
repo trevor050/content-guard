@@ -1,5 +1,5 @@
 /**
- * MASSIVE Secondary Benchmark for ContentGuard v4.5 - TORTURE TEST EDITION
+ * MASSIVE Secondary Benchmark for ContentGuard v4.7 - TORTURE TEST EDITION
  * 
  * Designed to be the most challenging, battle-tested benchmark possible
  * Focus: Sophisticated edge cases, sarcasm, subtle toxicity, false positive traps
