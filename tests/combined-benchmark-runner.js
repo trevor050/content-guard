@@ -24,11 +24,11 @@ const { ContentGuard } = require('../index.js')
 // Import benchmark classes
 const { MassiveBenchmarkV4 } = require('./massive-benchmark-v3.js')
 
-// Import variant classes directly
-const { ContentGuardV4Fast } = require('../lib/variants/v4-fast.js')
-const { ContentGuardV4Balanced } = require('../lib/variants/v4-balanced.js')
-const ContentGuardV4Large = require('../lib/variants/v4-large.js')
-const { ContentGuardV4Turbo } = require('../lib/variants/v4-turbo.js')
+// Variant classes are required lazily in runModelTest to avoid unnecessary
+// dependency loading when only specific models are tested. Some variants rely
+// on optional packages that may not be installed in every environment. By
+// deferring the require() calls we allow running a subset of models (for
+// example only v4.5-turbo) without triggering missing-module errors.
 
 class CombinedBenchmarkRunner {
   constructor() {
@@ -47,15 +47,17 @@ class CombinedBenchmarkRunner {
         performanceMetrics: {}
       }
     }
-    this.models = {
+    // Default model configurations. Turbo is always included here so the runner
+    // tests it out of the box even if no --versions flag is supplied.
+    this.defaultModels = {
       'v4.0-base': { type: 'base', debug: false, enableCaching: false },
       'v4.5-fast': { type: 'variant', variant: 'fast', debug: false, enableCaching: false },
       'v4.5-balanced': { type: 'variant', variant: 'balanced', debug: false, enableCaching: false },
       'v4.5-turbo': { type: 'variant', variant: 'turbo', debug: false, enableCaching: false },
-      'v4.5-large': { 
-        type: 'variant', 
-        variant: 'large', 
-        debug: false, 
+      'v4.5-large': {
+        type: 'variant',
+        variant: 'large',
+        debug: false,
         enableCaching: false,
         // Optimal aggressiveness values from hyperparameter optimization (93.95% accuracy)
         aggressiveness: {
@@ -67,6 +69,10 @@ class CombinedBenchmarkRunner {
         }
       }
     }
+
+    // Start with the full default set. This ensures turbo is always part of the
+    // initial model list unless explicitly filtered via --versions.
+    this.models = { ...this.defaultModels }
     
     // Parse command line arguments
     this.isVerbose = process.argv.includes('--verbose') || process.argv.includes('-v')
@@ -80,6 +86,7 @@ class CombinedBenchmarkRunner {
     this.showExtensiveFailures = process.argv.includes('--extensive-failures')
     this.showCategoryMatrix = process.argv.includes('--category-matrix')
     this.showBenchmarkSplit = process.argv.includes('--benchmark-split')
+    this.hardMode = process.argv.includes('--hard') || process.argv.includes('-H')
     
     // Parse number of failure examples to show (--examples 10)
     const examplesIndex = process.argv.findIndex(arg => arg === '--examples')
@@ -101,17 +108,18 @@ class CombinedBenchmarkRunner {
       // Filter models to only include requested versions
       const filteredModels = {}
       requestedVersions.forEach(version => {
-        if (this.models[version]) {
-          filteredModels[version] = this.models[version]
+        if (this.defaultModels[version]) {
+          filteredModels[version] = this.defaultModels[version]
         } else {
           console.warn(`⚠️  Unknown version: ${version}`)
         }
       })
-      
+
       if (Object.keys(filteredModels).length > 0) {
         this.models = filteredModels
       } else {
         console.error('❌ No valid versions specified, using all models')
+        this.models = { ...this.defaultModels }
       }
     }
     
@@ -310,21 +318,35 @@ class CombinedBenchmarkRunner {
       }
       
       switch (modelConfig.variant) {
-        case 'fast':
+        case 'fast': {
+          const { ContentGuardV4Fast } = require('../lib/variants/v4-fast.js')
           guard = new ContentGuardV4Fast(variantOptions)
           break
-        case 'balanced':
+        }
+        case 'balanced': {
+          const { ContentGuardV4Balanced } = require('../lib/variants/v4-balanced.js')
           guard = new ContentGuardV4Balanced(variantOptions)
           break
-        case 'large':
+        }
+        case 'large': {
+          const ContentGuardV4Large = require('../lib/variants/v4-large.js')
           guard = new ContentGuardV4Large(variantOptions)
           break
-        case 'large-optimized':
+        }
+        case 'large-optimized': {
+          // This variant is reserved for potential future use. It requires a
+          // specialized implementation that isn't bundled with the repository.
+          // The logic remains for backward compatibility, but will throw if
+          // invoked without the appropriate module.
+          const ContentGuardV4LargeOptimized = require('../lib/variants/v4-large-optimized.js')
           guard = new ContentGuardV4LargeOptimized(variantOptions)
           break
-        case 'turbo':
+        }
+        case 'turbo': {
+          const { ContentGuardV4Turbo } = require('../lib/variants/v4-turbo.js')
           guard = new ContentGuardV4Turbo(variantOptions)
           break
+        }
         default:
           throw new Error(`Unknown variant: ${modelConfig.variant}`)
       }
@@ -609,9 +631,15 @@ class CombinedBenchmarkRunner {
     const secondaryCases = await this.loadSecondaryBenchmark()
     
     // Combine all test cases
-    const allTestCases = [...primaryCases, ...secondaryCases]
+    let allTestCases = [...primaryCases, ...secondaryCases]
     console.log(`🎯 Total combined test cases: ${allTestCases.length}`)
-    
+
+    if (this.hardMode) {
+      console.log('🔥 Hard mode enabled - augmenting cases...')
+      allTestCases = this.augmentTestCases(allTestCases)
+      console.log(`🎮 Hard mode case count: ${allTestCases.length}`)
+    }
+
     this.results.summary.totalCases = allTestCases.length
     
     // Test each model
@@ -766,6 +794,8 @@ class CombinedBenchmarkRunner {
       console.log('')
       console.log('   Scoring Options:')
       console.log('     --weighted (-w): Use weighted scoring (3x harassment, 1.5x clean)')
+      console.log('   Benchmark Difficulty:')
+      console.log('     --hard (-H): Add noisy variants of every case for a tougher challenge')
       console.log('')
       console.log('   Specific Analysis:')
       console.log('     --failures: Show detailed failure analysis')
@@ -780,6 +810,7 @@ class CombinedBenchmarkRunner {
       console.log('     --versions model1,model2: Test specific versions only')
       console.log('       (e.g., --versions v4.0-base,v4.5-large,v2.1-legacy)')
       console.log('     --full (-f): Include all legacy versions (v3.0, v2.1, v1.02)')
+      console.log('       Turbo is always included by default when no versions are specified')
       console.log('')
       console.log('   Output Control:')
       console.log('     --examples N: Show N failure examples per category (default: 3, max: 20)')
@@ -1546,6 +1577,117 @@ class CombinedBenchmarkRunner {
         ` | ${secondary.falseNegativeRate.toFixed(1)}%`
       )
     })
+  }
+
+  augmentTestCases(cases) {
+    const augmented = []
+    cases.forEach(tc => {
+      augmented.push(tc)
+
+      const leet = { ...tc, text: this.applyLeetSpeakNoise(tc.text), context: `${tc.context}_leet` }
+      const punct = { ...tc, text: this.injectPunctuationNoise(tc.text), context: `${tc.context}_noise` }
+      const scramble = { ...tc, text: this.applyWordScrambleNoise(tc.text), context: `${tc.context}_scramble` }
+      const unicode = { ...tc, text: this.injectZeroWidthNoise(tc.text), context: `${tc.context}_unicode` }
+      const confusable = { ...tc, text: this.applyConfusableNoise(tc.text), context: `${tc.context}_confusable` }
+      const reversed = { ...tc, text: this.reverseTextNoise(tc.text), context: `${tc.context}_reverse` }
+      const superNoise = { ...tc, text: this.applySuperNoise(tc.text), context: `${tc.context}_super` }
+
+      augmented.push(leet, punct, scramble, unicode, confusable, reversed, superNoise)
+    })
+
+    return augmented
+  }
+
+  applyLeetSpeakNoise(text) {
+    const map = { a: '4', e: '3', i: '1', o: '0', s: '5', t: '7' }
+    return text
+      .split('')
+      .map(ch => {
+        const lower = ch.toLowerCase()
+        if (map[lower] && Math.random() < 0.9) {
+          return map[lower]
+        }
+        return ch
+      })
+      .join('')
+  }
+
+  injectPunctuationNoise(text) {
+    const symbols = ['!', '?', '#', '$', '%', '~']
+    return text
+      .split('')
+      .map(ch => (Math.random() < 0.6 ? ch + symbols[Math.floor(Math.random() * symbols.length)] : ch))
+      .join('')
+  }
+
+  applyWordScrambleNoise(text) {
+    return text
+      .split(' ')
+      .map(word => {
+        if (word.length > 3 && Math.random() < 0.3) {
+          const middle = word.slice(1, -1).split('')
+          for (let i = middle.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1))
+            ;[middle[i], middle[j]] = [middle[j], middle[i]]
+          }
+          return word[0] + middle.join('') + word[word.length - 1]
+        }
+        return word
+      })
+      .join(' ')
+  }
+
+  injectZeroWidthNoise(text) {
+    const zwChars = ['\u200b', '\u200c', '\u200d']
+    return text
+      .split('')
+      .map(ch => (Math.random() < 0.3 ? ch + zwChars[Math.floor(Math.random() * zwChars.length)] : ch))
+      .join('')
+  }
+
+  applyConfusableNoise(text) {
+    const map = {
+      a: 'а',
+      e: 'е',
+      i: 'і',
+      o: 'ο',
+      c: 'с',
+      p: 'р',
+      x: 'х',
+      y: 'у'
+    }
+    return text
+      .split('')
+      .map(ch => {
+        const lower = ch.toLowerCase()
+        if (map[lower] && Math.random() < 0.7) {
+          const conf = map[lower]
+          return ch === lower ? conf : conf.toUpperCase()
+        }
+        return ch
+      })
+      .join('')
+  }
+
+  reverseTextNoise(text) {
+    return text
+      .split(' ')
+      .map(word => (Math.random() < 0.5 ? word.split('').reverse().join('') : word))
+      .join(' ')
+  }
+
+  applySuperNoise(text) {
+    return this.reverseTextNoise(
+      this.applyConfusableNoise(
+        this.injectZeroWidthNoise(
+          this.applyWordScrambleNoise(
+            this.injectPunctuationNoise(
+              this.applyLeetSpeakNoise(text)
+            )
+          )
+        )
+      )
+    )
   }
 
   generateExtensiveFailureAnalysis(sortedModels) {
