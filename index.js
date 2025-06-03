@@ -1,5 +1,5 @@
 /**
- * 🛡️ ContentGuard v4.5 - Ultimate Anti-Troll System
+ * 🛡️ ContentGuard v4.7 - Ultimate Anti-Troll System
  * 
  * Super Simple API - Just analyze text and get a spam score from 0-10
  * 
@@ -243,8 +243,7 @@ class SimpleFallbackGuard {
   }
 }
 
-// Try to load the advanced v4.5 system, fallback to simple system
-let AdvancedGuard = null
+// Try to load the advanced v4.7 system, fallback to simple system
 let guardCache = new Map()
 
 async function createGuard(variant = 'balanced', options = {}) {
@@ -255,22 +254,28 @@ async function createGuard(variant = 'balanced', options = {}) {
   }
   
   // Try to load advanced system first
-  if (!AdvancedGuard) {
-    try {
-      AdvancedGuard = require('./lib/variants/v4-balanced').ContentGuardV4Balanced
-    } catch (error) {
-      if (options.debug) {
-        console.log('Advanced system not available, using simple fallback:', error.message)
-      }
+  let GuardClass = null
+  try {
+    const variantMap = {
+      fast: require('./lib/variants/v4-fast.js').ContentGuardV4Fast,
+      balanced: require('./lib/variants/v4-balanced.js').ContentGuardV4Balanced,
+      large: require('./lib/variants/v4-large.js'),
+      turbo: require('./lib/variants/v4-turbo.js').ContentGuardV4Turbo,
+      ultra: require('./lib/variants/v4-ultra.js').ContentGuardV47Ultra
+    }
+    GuardClass = variantMap[variant] || variantMap.balanced
+  } catch (error) {
+    if (options.debug) {
+      console.log('Advanced system not available, using simple fallback:', error.message)
     }
   }
-  
+
   let guard
-  
-  if (AdvancedGuard) {
+
+  if (GuardClass) {
     try {
       // Try to create advanced guard
-      guard = new AdvancedGuard({
+      guard = new GuardClass({
         variant,
         debug: false, // Keep it silent by default
         ...options
@@ -280,7 +285,7 @@ async function createGuard(variant = 'balanced', options = {}) {
       await guard.analyze('test')
       
       if (options.debug) {
-        console.log(`✅ Advanced ContentGuard v4.5-${variant} initialized`)
+        console.log(`✅ Advanced ContentGuard v4.7-${variant} initialized`)
       }
     } catch (error) {
       if (options.debug) {
@@ -351,5 +356,12 @@ module.exports = {
     } catch {
       return SimpleFallbackGuard
     }
+  },
+  get ContentGuardV47Ultra() {
+    try {
+      return require('./lib/variants/v4-ultra').ContentGuardV47Ultra
+    } catch {
+      return SimpleFallbackGuard
+    }
   }
-} 
+}

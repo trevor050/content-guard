@@ -1,5 +1,5 @@
 /**
- * Simple API Test - ContentGuard v4.5
+ * Simple API Test - ContentGuard v4.7
  * 
  * Test the super simple, bulletproof API
  */
@@ -7,7 +7,7 @@
 const { analyze, isSpam, getScore, createGuard } = require('./index.js')
 
 async function testSimpleAPI() {
-  console.log('🚀 Testing ContentGuard v4.5 Simple API\n')
+  console.log('🚀 Testing ContentGuard v4.7 Simple API\n')
   
   // Test 1: Simple text analysis
   console.log('Test 1: Clean content')

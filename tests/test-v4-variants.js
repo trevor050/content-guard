@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * 🧪 ContentGuard v4.5 Variants Comprehensive Benchmark Suite
+ * 🧪 ContentGuard v4.7 Variants Comprehensive Benchmark Suite
  * 
- * Tests all ContentGuard v4.5 variants against the Massive Benchmark v3 test cases:
- * - v4.5-fast: Ultra-fast processing with minimal accuracy loss
- * - v4.5-balanced: Optimal speed-accuracy tradeoff 
- * - v4.5-large: Maximum accuracy with comprehensive analysis
+ * Tests all ContentGuard v4.7 variants against the Massive Benchmark v3 test cases:
+ * - v4.7-fast: Ultra-fast processing with minimal accuracy loss
+ * - v4.7-balanced: Optimal speed-accuracy tradeoff
+ * - v4.7-large: Maximum accuracy with comprehensive analysis
+ * - v4.7-turbo: Extreme speed variant for real-time
+ * - v4.7-ultra: Experimental high-accuracy preview
  * - v4.0-base: Original base ContentGuard v4.0
  * 
  * Provides detailed performance comparison including:
@@ -27,6 +29,7 @@ const { ContentGuardV4Fast } = require('../lib/variants/v4-fast.js')
 const { ContentGuardV4Balanced } = require('../lib/variants/v4-balanced.js')
 const ContentGuardV4Large = require('../lib/variants/v4-large.js')
 const { ContentGuardV4Turbo } = require('../lib/variants/v4-turbo.js')
+const { ContentGuardV47Ultra } = require('../lib/variants/v4-ultra.js')
 
 // Import the test cases from MassiveBenchmarkV4 class
 const { MassiveBenchmarkV4 } = require('./massive-benchmark-v3.js')
@@ -41,7 +44,7 @@ class ContentGuardV4VariantTester {
   }
 
   initializeVariants() {
-    console.log('🚀 Initializing ContentGuard v4.5 variants...')
+    console.log('🚀 Initializing ContentGuard v4.7 variants...')
     
     // Base v4.0 ContentGuard
     this.variants['v4.0-base'] = new ContentGuard('moderate', {
@@ -49,26 +52,32 @@ class ContentGuardV4VariantTester {
       enableCaching: false
     })
 
-    // v4.5 Turbo variant (new - ultra-fast for massive real-time)
-    this.variants['v4.5-turbo'] = new ContentGuardV4Turbo({
+    // v4.7 Turbo variant (new - ultra-fast for massive real-time)
+    this.variants['v4.7-turbo'] = new ContentGuardV4Turbo({
       debug: false,
       enableCaching: false
     })
 
-    // v4.5 Fast variant (improved)
-    this.variants['v4.5-fast'] = new ContentGuardV4Fast({
+    // v4.7 Fast variant (improved)
+    this.variants['v4.7-fast'] = new ContentGuardV4Fast({
       debug: false,
       enableCaching: false
     })
 
-    // v4.5 Balanced variant (enhanced)
-    this.variants['v4.5-balanced'] = new ContentGuardV4Balanced({
+    // v4.7 Balanced variant (enhanced)
+    this.variants['v4.7-balanced'] = new ContentGuardV4Balanced({
       debug: false,
       enableCaching: false
     })
 
-    // v4.5 Large variant
-    this.variants['v4.5-large'] = new ContentGuardV4Large({
+    // v4.7 Large variant
+    this.variants['v4.7-large'] = new ContentGuardV4Large({
+      debug: false,
+      enableCaching: false
+    })
+
+    // v4.7 Ultra preview variant
+    this.variants['v4.7-ultra'] = new ContentGuardV47Ultra({
       debug: false,
       enableCaching: false
     })
@@ -87,7 +96,7 @@ class ContentGuardV4VariantTester {
   }
 
   async runComprehensiveBenchmark(variantFilter = null) {
-    console.log('\n🔥 ContentGuard v4.5 Variants Comprehensive Benchmark')
+    console.log('\n🔥 ContentGuard v4.7 Variants Comprehensive Benchmark')
     console.log('=' .repeat(80))
     console.log(`Testing ${this.testCases.length} sophisticated real-world scenarios...`)
     console.log('🎯 Target: Compare all variants for accuracy, speed, and reliability')
@@ -514,9 +523,9 @@ class ContentGuardV4VariantTester {
     console.log(`   ⚖️ Best Balance: ${bestBalance} (accuracy/speed ratio)`)
 
     console.log('\n📋 USE CASE RECOMMENDATIONS:')
-    console.log('   🚀 High-Volume/Real-time: Use v4.5-fast for maximum throughput')
-    console.log('   🏢 Production Applications: Use v4.5-balanced for best overall performance')
-    console.log('   🔬 Critical Moderation: Use v4.5-large for maximum accuracy')
+    console.log('   🚀 High-Volume/Real-time: Use v4.7-fast for maximum throughput')
+    console.log('   🏢 Production Applications: Use v4.7-balanced for best overall performance')
+    console.log('   🔬 Critical Moderation: Use v4.7-large for maximum accuracy')
     console.log('   🔄 Hybrid Strategy: Use variant auto-selection based on content complexity')
 
     console.log('\n⚠️ AREAS FOR IMPROVEMENT:')
@@ -592,7 +601,7 @@ async function main() {
   const variantFilter = args.find(arg => arg.startsWith('--variants='))?.split('=')[1]
   const exportResults = args.includes('--export')
   
-  console.log('🧪 ContentGuard v4.5 Variants Comprehensive Benchmark Suite')
+  console.log('🧪 ContentGuard v4.7 Variants Comprehensive Benchmark Suite')
   console.log('=' .repeat(80))
   
   if (variantFilter) {
@@ -611,7 +620,7 @@ async function main() {
   console.log('\n✅ Benchmark completed successfully!')
   console.log('\nUsage examples:')
   console.log('  node tests/test-v4-variants.js                    # Test all variants')
-  console.log('  node tests/test-v4-variants.js --variants=v4.5-fast,v4.5-large  # Test specific variants') 
+  console.log('  node tests/test-v4-variants.js --variants=v4.7-fast,v4.7-large  # Test specific variants') 
   console.log('  node tests/test-v4-variants.js --export           # Export results to JSON')
 }
 

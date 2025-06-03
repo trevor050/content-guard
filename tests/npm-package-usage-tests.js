@@ -1,5 +1,5 @@
 /**
- * ContentGuard v4.5 NPM Package Usage Tests
+ * ContentGuard v4.7 NPM Package Usage Tests
  * 
  * Demonstrates real-world usage patterns for ContentGuard as an NPM package
  * Tests all 4 variants: fast, balanced, large, turbo
@@ -30,7 +30,7 @@ function group(name, groupFn) {
 }
 
 async function runTests() {
-  console.log('🧪 Running ContentGuard v4.5 NPM Package Usage Tests...\n');
+  console.log('🧪 Running ContentGuard v4.7 NPM Package Usage Tests...\n');
   
   for (const { description, testFn } of tests) {
     try {
@@ -50,7 +50,7 @@ async function runTests() {
   console.log(`📊 Test Results: ${results.passed} passed, ${results.failed} failed, ${results.total} total`);
   
   if (results.failed === 0) {
-    console.log('🎉 All tests passed! ContentGuard v4.5 is ready for production use.');
+    console.log('🎉 All tests passed! ContentGuard v4.7 is ready for production use.');
   } else {
     console.log('⚠️ Some tests failed. Please review the errors above.');
     process.exit(1);
@@ -99,7 +99,7 @@ const performanceResults = {
 
 // Define all tests
 group('Basic Package Import and Initialization', () => {
-  test('should import all v4.5 variants successfully', () => {
+  test('should import all v4.7 variants successfully', () => {
     assert(ContentGuardV4Fast, 'ContentGuardV4Fast should be available');
     assert(ContentGuardV4Balanced, 'ContentGuardV4Balanced should be available');
     assert(ContentGuardV4Large, 'ContentGuardV4Large should be available');
