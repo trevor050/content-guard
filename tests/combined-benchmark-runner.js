@@ -24,11 +24,11 @@ const { ContentGuard } = require('../index.js')
 // Import benchmark classes
 const { MassiveBenchmarkV4 } = require('./massive-benchmark-v3.js')
 
-// Import variant classes directly
-const { ContentGuardV4Fast } = require('../lib/variants/v4-fast.js')
-const { ContentGuardV4Balanced } = require('../lib/variants/v4-balanced.js')
-const ContentGuardV4Large = require('../lib/variants/v4-large.js')
-const { ContentGuardV4Turbo } = require('../lib/variants/v4-turbo.js')
+// Variant classes are required lazily in runModelTest to avoid unnecessary
+// dependency loading when only specific models are tested. Some variants rely
+// on optional packages that may not be installed in every environment. By
+// deferring the require() calls we allow running a subset of models (for
+// example only v4.5-turbo) without triggering missing-module errors.
 
 class CombinedBenchmarkRunner {
   constructor() {
@@ -47,15 +47,17 @@ class CombinedBenchmarkRunner {
         performanceMetrics: {}
       }
     }
-    this.models = {
+    // Default model configurations. Turbo is always included here so the runner
+    // tests it out of the box even if no --versions flag is supplied.
+    this.defaultModels = {
       'v4.0-base': { type: 'base', debug: false, enableCaching: false },
       'v4.5-fast': { type: 'variant', variant: 'fast', debug: false, enableCaching: false },
       'v4.5-balanced': { type: 'variant', variant: 'balanced', debug: false, enableCaching: false },
       'v4.5-turbo': { type: 'variant', variant: 'turbo', debug: false, enableCaching: false },
-      'v4.5-large': { 
-        type: 'variant', 
-        variant: 'large', 
-        debug: false, 
+      'v4.5-large': {
+        type: 'variant',
+        variant: 'large',
+        debug: false,
         enableCaching: false,
         // Optimal aggressiveness values from hyperparameter optimization (93.95% accuracy)
         aggressiveness: {
@@ -67,6 +69,10 @@ class CombinedBenchmarkRunner {
         }
       }
     }
+
+    // Start with the full default set. This ensures turbo is always part of the
+    // initial model list unless explicitly filtered via --versions.
+    this.models = { ...this.defaultModels }
     
     // Parse command line arguments
     this.isVerbose = process.argv.includes('--verbose') || process.argv.includes('-v')
@@ -102,17 +108,18 @@ class CombinedBenchmarkRunner {
       // Filter models to only include requested versions
       const filteredModels = {}
       requestedVersions.forEach(version => {
-        if (this.models[version]) {
-          filteredModels[version] = this.models[version]
+        if (this.defaultModels[version]) {
+          filteredModels[version] = this.defaultModels[version]
         } else {
           console.warn(`⚠️  Unknown version: ${version}`)
         }
       })
-      
+
       if (Object.keys(filteredModels).length > 0) {
         this.models = filteredModels
       } else {
         console.error('❌ No valid versions specified, using all models')
+        this.models = { ...this.defaultModels }
       }
     }
     
@@ -311,21 +318,35 @@ class CombinedBenchmarkRunner {
       }
       
       switch (modelConfig.variant) {
-        case 'fast':
+        case 'fast': {
+          const { ContentGuardV4Fast } = require('../lib/variants/v4-fast.js')
           guard = new ContentGuardV4Fast(variantOptions)
           break
-        case 'balanced':
+        }
+        case 'balanced': {
+          const { ContentGuardV4Balanced } = require('../lib/variants/v4-balanced.js')
           guard = new ContentGuardV4Balanced(variantOptions)
           break
-        case 'large':
+        }
+        case 'large': {
+          const ContentGuardV4Large = require('../lib/variants/v4-large.js')
           guard = new ContentGuardV4Large(variantOptions)
           break
-        case 'large-optimized':
+        }
+        case 'large-optimized': {
+          // This variant is reserved for potential future use. It requires a
+          // specialized implementation that isn't bundled with the repository.
+          // The logic remains for backward compatibility, but will throw if
+          // invoked without the appropriate module.
+          const ContentGuardV4LargeOptimized = require('../lib/variants/v4-large-optimized.js')
           guard = new ContentGuardV4LargeOptimized(variantOptions)
           break
-        case 'turbo':
+        }
+        case 'turbo': {
+          const { ContentGuardV4Turbo } = require('../lib/variants/v4-turbo.js')
           guard = new ContentGuardV4Turbo(variantOptions)
           break
+        }
         default:
           throw new Error(`Unknown variant: ${modelConfig.variant}`)
       }
@@ -789,6 +810,7 @@ class CombinedBenchmarkRunner {
       console.log('     --versions model1,model2: Test specific versions only')
       console.log('       (e.g., --versions v4.0-base,v4.5-large,v2.1-legacy)')
       console.log('     --full (-f): Include all legacy versions (v3.0, v2.1, v1.02)')
+      console.log('       Turbo is always included by default when no versions are specified')
       console.log('')
       console.log('   Output Control:')
       console.log('     --examples N: Show N failure examples per category (default: 3, max: 20)')
