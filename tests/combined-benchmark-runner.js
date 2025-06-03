@@ -80,6 +80,7 @@ class CombinedBenchmarkRunner {
     this.showExtensiveFailures = process.argv.includes('--extensive-failures')
     this.showCategoryMatrix = process.argv.includes('--category-matrix')
     this.showBenchmarkSplit = process.argv.includes('--benchmark-split')
+    this.hardMode = process.argv.includes('--hard') || process.argv.includes('-H')
     
     // Parse number of failure examples to show (--examples 10)
     const examplesIndex = process.argv.findIndex(arg => arg === '--examples')
@@ -609,9 +610,15 @@ class CombinedBenchmarkRunner {
     const secondaryCases = await this.loadSecondaryBenchmark()
     
     // Combine all test cases
-    const allTestCases = [...primaryCases, ...secondaryCases]
+    let allTestCases = [...primaryCases, ...secondaryCases]
     console.log(`🎯 Total combined test cases: ${allTestCases.length}`)
-    
+
+    if (this.hardMode) {
+      console.log('🔥 Hard mode enabled - augmenting cases...')
+      allTestCases = this.augmentTestCases(allTestCases)
+      console.log(`🎮 Hard mode case count: ${allTestCases.length}`)
+    }
+
     this.results.summary.totalCases = allTestCases.length
     
     // Test each model
@@ -766,6 +773,8 @@ class CombinedBenchmarkRunner {
       console.log('')
       console.log('   Scoring Options:')
       console.log('     --weighted (-w): Use weighted scoring (3x harassment, 1.5x clean)')
+      console.log('   Benchmark Difficulty:')
+      console.log('     --hard (-H): Add noisy variants of every case for a tougher challenge')
       console.log('')
       console.log('   Specific Analysis:')
       console.log('     --failures: Show detailed failure analysis')
@@ -1546,6 +1555,117 @@ class CombinedBenchmarkRunner {
         ` | ${secondary.falseNegativeRate.toFixed(1)}%`
       )
     })
+  }
+
+  augmentTestCases(cases) {
+    const augmented = []
+    cases.forEach(tc => {
+      augmented.push(tc)
+
+      const leet = { ...tc, text: this.applyLeetSpeakNoise(tc.text), context: `${tc.context}_leet` }
+      const punct = { ...tc, text: this.injectPunctuationNoise(tc.text), context: `${tc.context}_noise` }
+      const scramble = { ...tc, text: this.applyWordScrambleNoise(tc.text), context: `${tc.context}_scramble` }
+      const unicode = { ...tc, text: this.injectZeroWidthNoise(tc.text), context: `${tc.context}_unicode` }
+      const confusable = { ...tc, text: this.applyConfusableNoise(tc.text), context: `${tc.context}_confusable` }
+      const reversed = { ...tc, text: this.reverseTextNoise(tc.text), context: `${tc.context}_reverse` }
+      const superNoise = { ...tc, text: this.applySuperNoise(tc.text), context: `${tc.context}_super` }
+
+      augmented.push(leet, punct, scramble, unicode, confusable, reversed, superNoise)
+    })
+
+    return augmented
+  }
+
+  applyLeetSpeakNoise(text) {
+    const map = { a: '4', e: '3', i: '1', o: '0', s: '5', t: '7' }
+    return text
+      .split('')
+      .map(ch => {
+        const lower = ch.toLowerCase()
+        if (map[lower] && Math.random() < 0.9) {
+          return map[lower]
+        }
+        return ch
+      })
+      .join('')
+  }
+
+  injectPunctuationNoise(text) {
+    const symbols = ['!', '?', '#', '$', '%', '~']
+    return text
+      .split('')
+      .map(ch => (Math.random() < 0.6 ? ch + symbols[Math.floor(Math.random() * symbols.length)] : ch))
+      .join('')
+  }
+
+  applyWordScrambleNoise(text) {
+    return text
+      .split(' ')
+      .map(word => {
+        if (word.length > 3 && Math.random() < 0.3) {
+          const middle = word.slice(1, -1).split('')
+          for (let i = middle.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1))
+            ;[middle[i], middle[j]] = [middle[j], middle[i]]
+          }
+          return word[0] + middle.join('') + word[word.length - 1]
+        }
+        return word
+      })
+      .join(' ')
+  }
+
+  injectZeroWidthNoise(text) {
+    const zwChars = ['\u200b', '\u200c', '\u200d']
+    return text
+      .split('')
+      .map(ch => (Math.random() < 0.3 ? ch + zwChars[Math.floor(Math.random() * zwChars.length)] : ch))
+      .join('')
+  }
+
+  applyConfusableNoise(text) {
+    const map = {
+      a: 'а',
+      e: 'е',
+      i: 'і',
+      o: 'ο',
+      c: 'с',
+      p: 'р',
+      x: 'х',
+      y: 'у'
+    }
+    return text
+      .split('')
+      .map(ch => {
+        const lower = ch.toLowerCase()
+        if (map[lower] && Math.random() < 0.7) {
+          const conf = map[lower]
+          return ch === lower ? conf : conf.toUpperCase()
+        }
+        return ch
+      })
+      .join('')
+  }
+
+  reverseTextNoise(text) {
+    return text
+      .split(' ')
+      .map(word => (Math.random() < 0.5 ? word.split('').reverse().join('') : word))
+      .join(' ')
+  }
+
+  applySuperNoise(text) {
+    return this.reverseTextNoise(
+      this.applyConfusableNoise(
+        this.injectZeroWidthNoise(
+          this.applyWordScrambleNoise(
+            this.injectPunctuationNoise(
+              this.applyLeetSpeakNoise(text)
+            )
+          )
+        )
+      )
+    )
   }
 
   generateExtensiveFailureAnalysis(sortedModels) {
