@@ -1312,14 +1312,17 @@ class CombinedBenchmarkRunner {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const reportPath = `combined-benchmark-report-${timestamp}.json`
     
-    fs.writeFileSync(reportPath, JSON.stringify(this.results, null, 2))
-    console.log(`\n📄 Detailed combined report saved to: ${reportPath}`)
+    // fs.writeFileSync(reportPath, JSON.stringify(this.results, null, 2))
+    // console.log(`\n📄 Detailed combined report saved to: ${reportPath}`)
     
     // Also save a summary CSV for easy analysis
     const csvPath = `combined-benchmark-summary-${timestamp}.csv`
     const csvContent = this.generateCSVSummary()
-    fs.writeFileSync(csvPath, csvContent)
-    console.log(`📊 CSV summary saved to: ${csvPath}`)
+    // fs.writeFileSync(csvPath, csvContent)
+    // console.log(`📊 CSV summary saved to: ${csvPath}`)
+    
+    console.log(`\n📄 Report generation disabled (would save to: ${reportPath})`)
+    console.log(`📊 CSV generation disabled (would save to: ${csvPath})`)
   }
 
   generateCSVSummary() {
