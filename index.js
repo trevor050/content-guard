@@ -166,7 +166,7 @@ class SimpleFallbackGuard {
         professionalContext: professionalMatches,
         fields
       })
-      
+
     } catch (error) {
       const processingTime = Date.now() - startTime
       if (this.debug) {
