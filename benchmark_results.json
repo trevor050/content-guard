@@ -1,0 +1,702 @@
+{
+  "current": {
+    "moderate": {
+      "total": 256,
+      "correct": 67,
+      "incorrect": 147,
+      "falsePositives": 0,
+      "falseNegatives": 147,
+      "categories": {
+        "professional": {
+          "total": 43,
+          "correct": 43,
+          "incorrect": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        "workplace_harassment": {
+          "total": 32,
+          "correct": 0,
+          "incorrect": 32,
+          "falsePositives": 0,
+          "falseNegatives": 32
+        },
+        "sophisticated_harassment": {
+          "total": 32,
+          "correct": 0,
+          "incorrect": 32,
+          "falsePositives": 0,
+          "falseNegatives": 32
+        },
+        "adversarial_attacks": {
+          "total": 28,
+          "correct": 0,
+          "incorrect": 28,
+          "falsePositives": 0,
+          "falseNegatives": 28
+        },
+        "modern_communication": {
+          "total": 16,
+          "correct": 10,
+          "incorrect": 6,
+          "falsePositives": 0,
+          "falseNegatives": 6
+        },
+        "cross_cultural": {
+          "total": 18,
+          "correct": 4,
+          "incorrect": 6,
+          "falsePositives": 0,
+          "falseNegatives": 6
+        },
+        "social_engineering": {
+          "total": 24,
+          "correct": 0,
+          "incorrect": 24,
+          "falsePositives": 0,
+          "falseNegatives": 24
+        },
+        "boundary_testing": {
+          "total": 16,
+          "correct": 10,
+          "incorrect": 6,
+          "falsePositives": 0,
+          "falseNegatives": 6
+        },
+        "edge_cases": {
+          "total": 34,
+          "correct": 0,
+          "incorrect": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        "subtle_harassment_v2": {
+          "total": 8,
+          "correct": 0,
+          "incorrect": 8,
+          "falsePositives": 0,
+          "falseNegatives": 8
+        },
+        "adversarial_v2": {
+          "total": 5,
+          "correct": 0,
+          "incorrect": 5,
+          "falsePositives": 0,
+          "falseNegatives": 5
+        }
+      },
+      "accuracy": 26.17
+    },
+    "professional": {
+      "total": 256,
+      "correct": 67,
+      "incorrect": 147,
+      "falsePositives": 0,
+      "falseNegatives": 147,
+      "categories": {
+        "professional": {
+          "total": 43,
+          "correct": 43,
+          "incorrect": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        "workplace_harassment": {
+          "total": 32,
+          "correct": 0,
+          "incorrect": 32,
+          "falsePositives": 0,
+          "falseNegatives": 32
+        },
+        "sophisticated_harassment": {
+          "total": 32,
+          "correct": 0,
+          "incorrect": 32,
+          "falsePositives": 0,
+          "falseNegatives": 32
+        },
+        "adversarial_attacks": {
+          "total": 28,
+          "correct": 0,
+          "incorrect": 28,
+          "falsePositives": 0,
+          "falseNegatives": 28
+        },
+        "modern_communication": {
+          "total": 16,
+          "correct": 10,
+          "incorrect": 6,
+          "falsePositives": 0,
+          "falseNegatives": 6
+        },
+        "cross_cultural": {
+          "total": 18,
+          "correct": 4,
+          "incorrect": 6,
+          "falsePositives": 0,
+          "falseNegatives": 6
+        },
+        "social_engineering": {
+          "total": 24,
+          "correct": 0,
+          "incorrect": 24,
+          "falsePositives": 0,
+          "falseNegatives": 24
+        },
+        "boundary_testing": {
+          "total": 16,
+          "correct": 10,
+          "incorrect": 6,
+          "falsePositives": 0,
+          "falseNegatives": 6
+        },
+        "edge_cases": {
+          "total": 34,
+          "correct": 0,
+          "incorrect": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        "subtle_harassment_v2": {
+          "total": 8,
+          "correct": 0,
+          "incorrect": 8,
+          "falsePositives": 0,
+          "falseNegatives": 8
+        },
+        "adversarial_v2": {
+          "total": 5,
+          "correct": 0,
+          "incorrect": 5,
+          "falsePositives": 0,
+          "falseNegatives": 5
+        }
+      },
+      "accuracy": 26.17
+    },
+    "strict": {
+      "total": 256,
+      "correct": 67,
+      "incorrect": 147,
+      "falsePositives": 0,
+      "falseNegatives": 147,
+      "categories": {
+        "professional": {
+          "total": 43,
+          "correct": 43,
+          "incorrect": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        "workplace_harassment": {
+          "total": 32,
+          "correct": 0,
+          "incorrect": 32,
+          "falsePositives": 0,
+          "falseNegatives": 32
+        },
+        "sophisticated_harassment": {
+          "total": 32,
+          "correct": 0,
+          "incorrect": 32,
+          "falsePositives": 0,
+          "falseNegatives": 32
+        },
+        "adversarial_attacks": {
+          "total": 28,
+          "correct": 0,
+          "incorrect": 28,
+          "falsePositives": 0,
+          "falseNegatives": 28
+        },
+        "modern_communication": {
+          "total": 16,
+          "correct": 10,
+          "incorrect": 6,
+          "falsePositives": 0,
+          "falseNegatives": 6
+        },
+        "cross_cultural": {
+          "total": 18,
+          "correct": 4,
+          "incorrect": 6,
+          "falsePositives": 0,
+          "falseNegatives": 6
+        },
+        "social_engineering": {
+          "total": 24,
+          "correct": 0,
+          "incorrect": 24,
+          "falsePositives": 0,
+          "falseNegatives": 24
+        },
+        "boundary_testing": {
+          "total": 16,
+          "correct": 10,
+          "incorrect": 6,
+          "falsePositives": 0,
+          "falseNegatives": 6
+        },
+        "edge_cases": {
+          "total": 34,
+          "correct": 0,
+          "incorrect": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        "subtle_harassment_v2": {
+          "total": 8,
+          "correct": 0,
+          "incorrect": 8,
+          "falsePositives": 0,
+          "falseNegatives": 8
+        },
+        "adversarial_v2": {
+          "total": 5,
+          "correct": 0,
+          "incorrect": 5,
+          "falsePositives": 0,
+          "falseNegatives": 5
+        }
+      },
+      "accuracy": 26.17
+    },
+    "gaming": {
+      "total": 256,
+      "correct": 67,
+      "incorrect": 147,
+      "falsePositives": 0,
+      "falseNegatives": 147,
+      "categories": {
+        "professional": {
+          "total": 43,
+          "correct": 43,
+          "incorrect": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        "workplace_harassment": {
+          "total": 32,
+          "correct": 0,
+          "incorrect": 32,
+          "falsePositives": 0,
+          "falseNegatives": 32
+        },
+        "sophisticated_harassment": {
+          "total": 32,
+          "correct": 0,
+          "incorrect": 32,
+          "falsePositives": 0,
+          "falseNegatives": 32
+        },
+        "adversarial_attacks": {
+          "total": 28,
+          "correct": 0,
+          "incorrect": 28,
+          "falsePositives": 0,
+          "falseNegatives": 28
+        },
+        "modern_communication": {
+          "total": 16,
+          "correct": 10,
+          "incorrect": 6,
+          "falsePositives": 0,
+          "falseNegatives": 6
+        },
+        "cross_cultural": {
+          "total": 18,
+          "correct": 4,
+          "incorrect": 6,
+          "falsePositives": 0,
+          "falseNegatives": 6
+        },
+        "social_engineering": {
+          "total": 24,
+          "correct": 0,
+          "incorrect": 24,
+          "falsePositives": 0,
+          "falseNegatives": 24
+        },
+        "boundary_testing": {
+          "total": 16,
+          "correct": 10,
+          "incorrect": 6,
+          "falsePositives": 0,
+          "falseNegatives": 6
+        },
+        "edge_cases": {
+          "total": 34,
+          "correct": 0,
+          "incorrect": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        "subtle_harassment_v2": {
+          "total": 8,
+          "correct": 0,
+          "incorrect": 8,
+          "falsePositives": 0,
+          "falseNegatives": 8
+        },
+        "adversarial_v2": {
+          "total": 5,
+          "correct": 0,
+          "incorrect": 5,
+          "falsePositives": 0,
+          "falseNegatives": 5
+        }
+      },
+      "accuracy": 26.17
+    }
+  },
+  "v3.0": {
+    "moderate": {
+      "total": 256,
+      "correct": 144,
+      "incorrect": 70,
+      "falsePositives": 5,
+      "falseNegatives": 65,
+      "categories": {
+        "professional": {
+          "total": 43,
+          "correct": 42,
+          "incorrect": 1,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        "workplace_harassment": {
+          "total": 32,
+          "correct": 29,
+          "incorrect": 3,
+          "falsePositives": 0,
+          "falseNegatives": 3
+        },
+        "sophisticated_harassment": {
+          "total": 32,
+          "correct": 18,
+          "incorrect": 14,
+          "falsePositives": 0,
+          "falseNegatives": 14
+        },
+        "adversarial_attacks": {
+          "total": 28,
+          "correct": 16,
+          "incorrect": 12,
+          "falsePositives": 0,
+          "falseNegatives": 12
+        },
+        "modern_communication": {
+          "total": 16,
+          "correct": 7,
+          "incorrect": 9,
+          "falsePositives": 3,
+          "falseNegatives": 6
+        },
+        "cross_cultural": {
+          "total": 18,
+          "correct": 6,
+          "incorrect": 4,
+          "falsePositives": 0,
+          "falseNegatives": 4
+        },
+        "social_engineering": {
+          "total": 24,
+          "correct": 1,
+          "incorrect": 23,
+          "falsePositives": 0,
+          "falseNegatives": 23
+        },
+        "boundary_testing": {
+          "total": 16,
+          "correct": 15,
+          "incorrect": 1,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        "edge_cases": {
+          "total": 34,
+          "correct": 0,
+          "incorrect": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        "subtle_harassment_v2": {
+          "total": 8,
+          "correct": 6,
+          "incorrect": 2,
+          "falsePositives": 0,
+          "falseNegatives": 2
+        },
+        "adversarial_v2": {
+          "total": 5,
+          "correct": 4,
+          "incorrect": 1,
+          "falsePositives": 0,
+          "falseNegatives": 1
+        }
+      },
+      "accuracy": 56.25
+    },
+    "professional": {
+      "total": 256,
+      "correct": 145,
+      "incorrect": 69,
+      "falsePositives": 4,
+      "falseNegatives": 65,
+      "categories": {
+        "professional": {
+          "total": 43,
+          "correct": 42,
+          "incorrect": 1,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        "workplace_harassment": {
+          "total": 32,
+          "correct": 29,
+          "incorrect": 3,
+          "falsePositives": 0,
+          "falseNegatives": 3
+        },
+        "sophisticated_harassment": {
+          "total": 32,
+          "correct": 18,
+          "incorrect": 14,
+          "falsePositives": 0,
+          "falseNegatives": 14
+        },
+        "adversarial_attacks": {
+          "total": 28,
+          "correct": 16,
+          "incorrect": 12,
+          "falsePositives": 0,
+          "falseNegatives": 12
+        },
+        "modern_communication": {
+          "total": 16,
+          "correct": 7,
+          "incorrect": 9,
+          "falsePositives": 3,
+          "falseNegatives": 6
+        },
+        "cross_cultural": {
+          "total": 18,
+          "correct": 6,
+          "incorrect": 4,
+          "falsePositives": 0,
+          "falseNegatives": 4
+        },
+        "social_engineering": {
+          "total": 24,
+          "correct": 1,
+          "incorrect": 23,
+          "falsePositives": 0,
+          "falseNegatives": 23
+        },
+        "boundary_testing": {
+          "total": 16,
+          "correct": 16,
+          "incorrect": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        "edge_cases": {
+          "total": 34,
+          "correct": 0,
+          "incorrect": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        "subtle_harassment_v2": {
+          "total": 8,
+          "correct": 6,
+          "incorrect": 2,
+          "falsePositives": 0,
+          "falseNegatives": 2
+        },
+        "adversarial_v2": {
+          "total": 5,
+          "correct": 4,
+          "incorrect": 1,
+          "falsePositives": 0,
+          "falseNegatives": 1
+        }
+      },
+      "accuracy": 56.64
+    },
+    "strict": {
+      "total": 256,
+      "correct": 150,
+      "incorrect": 64,
+      "falsePositives": 5,
+      "falseNegatives": 59,
+      "categories": {
+        "professional": {
+          "total": 43,
+          "correct": 42,
+          "incorrect": 1,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        "workplace_harassment": {
+          "total": 32,
+          "correct": 30,
+          "incorrect": 2,
+          "falsePositives": 0,
+          "falseNegatives": 2
+        },
+        "sophisticated_harassment": {
+          "total": 32,
+          "correct": 22,
+          "incorrect": 10,
+          "falsePositives": 0,
+          "falseNegatives": 10
+        },
+        "adversarial_attacks": {
+          "total": 28,
+          "correct": 16,
+          "incorrect": 12,
+          "falsePositives": 0,
+          "falseNegatives": 12
+        },
+        "modern_communication": {
+          "total": 16,
+          "correct": 7,
+          "incorrect": 9,
+          "falsePositives": 3,
+          "falseNegatives": 6
+        },
+        "cross_cultural": {
+          "total": 18,
+          "correct": 6,
+          "incorrect": 4,
+          "falsePositives": 0,
+          "falseNegatives": 4
+        },
+        "social_engineering": {
+          "total": 24,
+          "correct": 2,
+          "incorrect": 22,
+          "falsePositives": 0,
+          "falseNegatives": 22
+        },
+        "boundary_testing": {
+          "total": 16,
+          "correct": 15,
+          "incorrect": 1,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        "edge_cases": {
+          "total": 34,
+          "correct": 0,
+          "incorrect": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        "subtle_harassment_v2": {
+          "total": 8,
+          "correct": 6,
+          "incorrect": 2,
+          "falsePositives": 0,
+          "falseNegatives": 2
+        },
+        "adversarial_v2": {
+          "total": 5,
+          "correct": 4,
+          "incorrect": 1,
+          "falsePositives": 0,
+          "falseNegatives": 1
+        }
+      },
+      "accuracy": 58.59
+    },
+    "gaming": {
+      "total": 256,
+      "correct": 150,
+      "incorrect": 64,
+      "falsePositives": 5,
+      "falseNegatives": 59,
+      "categories": {
+        "professional": {
+          "total": 43,
+          "correct": 42,
+          "incorrect": 1,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        "workplace_harassment": {
+          "total": 32,
+          "correct": 30,
+          "incorrect": 2,
+          "falsePositives": 0,
+          "falseNegatives": 2
+        },
+        "sophisticated_harassment": {
+          "total": 32,
+          "correct": 22,
+          "incorrect": 10,
+          "falsePositives": 0,
+          "falseNegatives": 10
+        },
+        "adversarial_attacks": {
+          "total": 28,
+          "correct": 16,
+          "incorrect": 12,
+          "falsePositives": 0,
+          "falseNegatives": 12
+        },
+        "modern_communication": {
+          "total": 16,
+          "correct": 7,
+          "incorrect": 9,
+          "falsePositives": 3,
+          "falseNegatives": 6
+        },
+        "cross_cultural": {
+          "total": 18,
+          "correct": 6,
+          "incorrect": 4,
+          "falsePositives": 0,
+          "falseNegatives": 4
+        },
+        "social_engineering": {
+          "total": 24,
+          "correct": 2,
+          "incorrect": 22,
+          "falsePositives": 0,
+          "falseNegatives": 22
+        },
+        "boundary_testing": {
+          "total": 16,
+          "correct": 15,
+          "incorrect": 1,
+          "falsePositives": 1,
+          "falseNegatives": 0
+        },
+        "edge_cases": {
+          "total": 34,
+          "correct": 0,
+          "incorrect": 0,
+          "falsePositives": 0,
+          "falseNegatives": 0
+        },
+        "subtle_harassment_v2": {
+          "total": 8,
+          "correct": 6,
+          "incorrect": 2,
+          "falsePositives": 0,
+          "falseNegatives": 2
+        },
+        "adversarial_v2": {
+          "total": 5,
+          "correct": 4,
+          "incorrect": 1,
+          "falsePositives": 0,
+          "falseNegatives": 1
+        }
+      },
+      "accuracy": 58.59
+    }
+  }
+}

@@ -87,13 +87,92 @@ class ContentGuard {
       'business', 'project', 'meeting', 'analysis', 'report', 'professional',
       'technical', 'development', 'production', 'environment', 'security'
     ]
+
+    // Initialize components used in analyze method
+    this.preprocessor = new TextPreprocessor();
+    // this.preprocessor.initialize(); // TextPreprocessor does not have an initialize method
+    this.mlPlugins = {}; // For storing ML plugin instances
+    this.stats = { // Basic stats initialization
+      totalAnalyses: 0,
+      totalTime: 0,
+      averageTime: 0,
+      mlAnalyses: 0,
+      mlSuccessRate: 0
+    };
+    // It might also need PluginManager and ContextDetector if those were intended for the base class
+    // this.pluginManager = new PluginManager();
+    // this.contextDetector = new ContextDetector();
+
+    // Ensure this.threshold is set, as createResult uses it.
+    // this.options.spamThreshold is correctly set by mergeDefaultOptions.
+    this.threshold = this.options.spamThreshold;
+  }
+
+  mergeDefaultOptions(userOptions) {
+    const defaults = {
+      // Core settings
+      spamThreshold: userOptions.spamThreshold ?? 5, // Default to 5 if not provided
+      enableEarlyExit: userOptions.enableEarlyExit ?? true,
+      criticalThreshold: userOptions.criticalThreshold ?? 20, // Higher threshold for critical actions
+
+      // Performance optimization
+      enableCaching: userOptions.enableCaching ?? true,
+      cacheSize: userOptions.cacheSize ?? 1000,
+
+      // Plugin configurations - assuming ContentGuard might have its own plugin set or uses a subset
+      plugins: deepMerge({
+        // Define default plugin settings if ContentGuard uses them directly
+        // For example:
+        // obscenity: { weight: 1.0, contextAware: true },
+        // sentiment: { weight: 1.0, contextAware: true },
+      }, userOptions.plugins || {}),
+
+      // Preprocessing options
+      preprocessing: deepMerge({
+        normalizeUnicode: true,
+        normalizeLeetSpeak: true,
+        expandSlang: true,
+        removeExcessiveSpacing: true,
+        contextAware: true // Assuming context awareness is a general feature
+      }, userOptions.preprocessing || {}),
+
+      // Context detection options
+      contextDetection: deepMerge({
+        enableDomainDetection: true,
+        enablePatternMatching: true,
+        enableVocabularyAnalysis: true,
+        confidenceThreshold: 0.3
+      }, userOptions.contextDetection || {}),
+
+      // Feature toggles relevant to the main ContentGuard class
+      enableLazyLoading: userOptions.enableLazyLoading ?? true, // If applicable
+      debug: userOptions.debug ?? false,
+      enableMetrics: userOptions.enableMetrics ?? true, // If applicable
+      contextAware: userOptions.contextAware ?? true,
+
+      // ML features - these were in the constructor, ensure they are part of defaults
+      enableMLFeatures: userOptions.enableMLFeatures ?? true,
+      enableEmojiAnalysis: userOptions.enableEmojiAnalysis ?? true,
+      enableCrossCultural: userOptions.enableCrossCultural ?? true,
+      maxProcessingTime: userOptions.maxProcessingTime ?? 10000,
+
+
+      // Add any other specific default options for ContentGuard here
+      // These would be analogous to v4.0 advanced features or backwards compatibility options
+      // For example:
+      // enableAdversarialDetection: userOptions.enableAdversarialDetection ?? true,
+    };
+
+    // Merge defaults with user-provided options, userOptions take precedence
+    return { ...defaults, ...userOptions };
   }
   
   async analyze(input) {
     const startTime = Date.now()
     
     try {
-      // v4.7 ML Plugins
+      // Temporarily disable ML features to isolate pattern matching
+      /*
       if (this.options.enableMLFeatures) {
         console.log('🤖 Initializing v4.7 ML plugins...')
         
@@ -120,15 +199,30 @@ class ContentGuard {
         
         console.log('🚀 All v4.7 ML plugins initialized successfully')
       }
+      */
       
-      if (!text || text.trim().length === 0) {
+      // Create combined text for analysis first
+      const allText = [input.name, input.email, input.subject, input.message]
+        .filter(Boolean)
+        .join(' ')
+
+      if (!allText || allText.trim().length === 0) {
+        // This is the correct place for an early exit if all combined text is empty.
         return this.createResult(0, 'CLEAN', Date.now() - startTime, 'No content to analyze')
       }
-      
-      // Professional context protection
-      const lowerText = text.toLowerCase()
+
+      // Enhanced preprocessing with v4.7 confusables
+      // Assuming this.preprocessor is initialized in constructor or elsewhere.
+      const preprocessingResult = this.preprocessor.preprocess(allText, {
+        ...this.options.preprocessing,  // Pass user's preprocessing options
+        useAdvancedConfusables: true
+      })
+      const processedText = preprocessingResult.processedText
+      const allTextLower = processedText.toLowerCase(); // Define allTextLower based on processedText
+
+      // Professional context protection using allTextLower (derived from processedText)
       const professionalMatches = this.professionalTerms.filter(term => 
-        lowerText.includes(term)
+        allTextLower.includes(term)
       ).length
       
       // Apply professional context protection
@@ -139,48 +233,46 @@ class ContentGuard {
       let totalScore = 0
       const flags = []
       const matches = []
-      
-      // Check against spam patterns
+      // totalScore is initialized as `let totalScore = 0` further above.
+
+      // console.log(`[DEBUG] Analyzing processedText (length ${processedText?.length}): "${processedText?.substring(0, 100)}..."`);
+
       for (const { pattern, score, reason } of this.spamPatterns) {
-        const match = pattern.exec(text)
+        const currentPattern = pattern;
+        const currentScore = parseFloat(score) || 0;
+
+        // console.log(`[DEBUG] Testing pattern: ${currentPattern.toString()} with score: ${currentScore} against: "${processedText?.substring(0,50)}..."`);
+        // Ensure processedText is a string before exec
+        const match = (typeof processedText === 'string') ? currentPattern.exec(processedText) : null;
+
         if (match) {
-          // Apply professional context reduction
-          const adjustedScore = Math.round(score * (1 - professionalReduction))
-          if (adjustedScore > 0) {
-            totalScore += adjustedScore
-            flags.push(`${reason}: "${match[0]}"`)
-            matches.push({ text: match[0], score: adjustedScore, reason })
-          }
+          // console.log(`[DEBUG] MATCH FOUND for pattern: ${currentPattern.toString()}, Match: "${match[0]}"`);
+          const reduction = parseFloat(professionalReduction) || 0;
+          const adjustedScore = Math.round(currentScore * (1.0 - reduction));
+
+          // console.log(`[DEBUG] Original Score: ${currentScore}, Reduction: ${reduction}, Adjusted Score: ${adjustedScore}`);
           
-          if (this.debug) {
-            console.log(`🔍 Pattern matched: ${reason} - "${match[0]}" (+${adjustedScore})`)
+          if (adjustedScore > 0) {
+            totalScore += adjustedScore; // totalScore is the one declared earlier in the function
+            flags.push(`${reason}: "${match[0]}"`);
+            matches.push({ text: match[0], score: adjustedScore, reason });
+            // console.log(`[DEBUG] totalScore now: ${totalScore}`);
           }
         }
-        pattern.lastIndex = 0 // Reset regex
+        if (currentPattern && typeof currentPattern.lastIndex === 'number') { // Ensure pattern is a valid regex
+            currentPattern.lastIndex = 0; // Reset regex
+        }
       }
       
-      // Additional scoring factors
-      const emailCount = (text.match(/@\w+\.\w+/g) || []).length
+      // Additional scoring factors using processedText
+      const emailCount = (processedText && typeof processedText === 'string' ? processedText.match(/@\w+\.\w+/g) : null || []).length;
       if (emailCount > 2) {
-        totalScore += 3
-        flags.push(`Multiple emails detected (${emailCount})`)
+        // console.log(`[DEBUG] Emails found: ${emailCount}, adding 3 to score.`);
+        totalScore += 3; // totalScore is the one declared earlier in the function
+        flags.push(`Multiple emails detected (${emailCount})`);
+        // console.log(`[DEBUG] totalScore after email check: ${totalScore}`);
       }
-
-      // Create combined text for analysis
-      const allText = [input.name, input.email, input.subject, input.message]
-        .filter(Boolean)
-        .join(' ')
-
-      if (!allText || allText.trim().length === 0) {
-        return this.createResult(0, [], { error: 'Invalid input text' })
-      }
-
-      // Enhanced preprocessing with v4.7 confusables
-      const preprocessingResult = this.preprocessor.preprocess(allText, {
-        ...this.options.preprocessing,  // Pass user's preprocessing options
-        useAdvancedConfusables: true
-      })
-      const processedText = preprocessingResult.processedText
+      // console.log(`[DEBUG] Final totalScore before createResult: ${totalScore}`);
 
       // Create content object for plugins with PREPROCESSED text
       const content = {
@@ -188,15 +280,15 @@ class ContentGuard {
         email: input.email || '',
         subject: input.subject || '',
         message: input.message || '',
-        allText: processedText,  // FIXED: Use preprocessed text instead of original
-        allTextLower: processedText.toLowerCase(),  // FIXED: Use preprocessed text
-        originalText: allText  // Keep original for reference
+        allText: processedText,
+        allTextLower: allTextLower,
+        originalText: allText
       }
 
       // Initialize result structure
-      const result = {
-        score: 0,
-        flags: [],
+      const result = { // This 'result' object is passed to runMLAnalysis
+        score: 0, // ML plugins might add to this score
+        flags: [], // ML plugins might add to this
         preset: this.preset,
         metadata: {
           originalText: allText,
@@ -218,16 +310,20 @@ class ContentGuard {
       }
       
       // v4.7 ML analysis pipeline
+      /*
       if (this.options.enableMLFeatures) {
-        await this.runMLAnalysis(processedText, context, result)
+        const context = {}; // Define context, as it's expected by runMLAnalysis
+        await this.runMLAnalysis(processedText, context, result);
+        totalScore += result.score; // Add score from ML analysis to totalScore
       }
+      */
       
       const processingTime = Date.now() - startTime
       return this.createResult(totalScore, this.getRiskLevel(totalScore), processingTime, null, {
         flags,
         matches,
-        professionalContext: professionalMatches,
-        fields
+        professionalContext: professionalMatches
+        // fields // 'fields' was not defined, causing a ReferenceError
       })
 
     } catch (error) {
@@ -243,7 +339,7 @@ class ContentGuard {
     const result = {
       // Main results (1-10 scale as requested)
       score: Math.round(score * 10) / 10, // Round to 1 decimal
-      isSpam: score >= this.threshold,
+      isSpam: score >= this.options.spamThreshold, // Use this.options.spamThreshold for consistency
       confidence: this.calculateConfidence(score),
       
       // Additional info
@@ -304,60 +400,26 @@ class ContentGuard {
     const result = await this.analyze(input)
     return result.score
   }
-}
-
-// Try to load the advanced v4.7 system, fallback to simple system
-let guardCache = new Map()
-
-    return {
-      isSpam: score >= threshold,
-      score: score,
-      confidence: this.calculateConfidence(score, threshold, metadata),
-      flags: flags,
-      preset: this.preset,
-      metadata: metadata || {},
-      preprocessingApplied: metadata?.preprocessing?.applied,  // NEW: Show if preprocessing worked
-      normalizedText: metadata?.processedText?.substring(0, 100),  // NEW: Show normalized text sample
-      version: '4.7.0',
-      timestamp: new Date().toISOString(),
-      performance: {
-        averageAnalysisTime: this.stats.averageTime,
-        totalAnalyses: this.stats.totalAnalyses,
-        mlSuccessRate: this.stats.mlSuccessRate
-      }
-    }
-  }
-  
-  // Try to load advanced system first
-  let GuardClass = null
-  try {
-    const variantMap = {
-      fast: require('./lib/variants/v4-fast.js').ContentGuardV4Fast,
-      balanced: require('./lib/variants/v4-balanced.js').ContentGuardV4Balanced,
-      large: require('./lib/variants/v4-large.js'),
-      turbo: require('./lib/variants/v4-turbo.js').ContentGuardV4Turbo
-    }
-    GuardClass = variantMap[variant] || variantMap.balanced
-  } catch (error) {
-    if (options.debug) {
-      console.log('Advanced system not available, using simple fallback:', error.message)
-    }
-  }
 
   // v4.7 Analytics and insights
   getAnalyticsReport() {
+    // Ensure this.stats and this.plugins are initialized, e.g., in constructor
+    this.stats = this.stats || { averageTime: 0, totalAnalyses: 0, mlSuccessRate: 0, totalTime: 0, mlAnalyses: 0 };
+    this.plugins = this.plugins || {};
+    this.mlPlugins = this.mlPlugins || {};
+
     return {
       version: '4.7.0',
       totalAnalyses: this.stats.totalAnalyses,
       performance: {
-        averageTime: `${this.stats.averageTime.toFixed(2)}ms`,
-        totalTime: `${this.stats.totalTime}ms`,
-        throughput: `${(this.stats.totalAnalyses / (this.stats.totalTime / 1000)).toFixed(2)} analyses/sec`
+        averageTime: `${(this.stats.averageTime || 0).toFixed(2)}ms`,
+        totalTime: `${this.stats.totalTime || 0}ms`,
+        throughput: `${this.stats.totalTime ? (this.stats.totalAnalyses / (this.stats.totalTime / 1000)).toFixed(2) : 0} analyses/sec`
       },
       mlMetrics: {
-        mlAnalyses: this.stats.mlAnalyses,
-        mlSuccessRate: `${(this.stats.mlSuccessRate * 100).toFixed(1)}%`,
-        mlCoverage: `${((this.stats.mlAnalyses / this.stats.totalAnalyses) * 100).toFixed(1)}%`
+        mlAnalyses: this.stats.mlAnalyses || 0,
+        mlSuccessRate: `${((this.stats.mlSuccessRate || 0) * 100).toFixed(1)}%`,
+        mlCoverage: `${this.stats.totalAnalyses ? ((this.stats.mlAnalyses / this.stats.totalAnalyses) * 100).toFixed(1) : 0}%`
       },
       features: {
         enabledPlugins: Object.keys(this.plugins).length,
@@ -367,51 +429,131 @@ let guardCache = new Map()
         emojiAnalysis: this.options.enableEmojiAnalysis,
         crossCultural: this.options.enableCrossCultural
       }
-      guard = null
+    };
+    // guard = null; // This was moved out and commented, seems unrelated to this method's logic.
+  }
+
+  async runMLAnalysis(processedText, context, result) {
+    // Basic implementation for the main ContentGuard class
+    // This should iterate through plugins in this.mlPlugins and call their analyze methods
+    // For now, this stub prevents "is not a function" error.
+    // It will call analyze on each initialized plugin and allow them to modify result.score and result.flags.
+    if (!this.mlPlugins) {
+      if (this.options.debug) console.log("mlPlugins not initialized");
+      return;
+    }
+
+    for (const pluginName in this.mlPlugins) {
+      if (this.mlPlugins.hasOwnProperty(pluginName) && this.mlPlugins[pluginName] && typeof this.mlPlugins[pluginName].analyze === 'function') {
+        try {
+          if (this.options.debug) console.log(`Running ML plugin: ${pluginName}`);
+          // Some plugins might be async, some not. Awaiting all for safety.
+          const pluginResponse = await this.mlPlugins[pluginName].analyze(processedText, context);
+          if (pluginResponse) {
+            if (pluginResponse.score) {
+              result.score += pluginResponse.score;
+            }
+            if (pluginResponse.flags && Array.isArray(pluginResponse.flags)) {
+              result.flags.push(...pluginResponse.flags);
+            }
+            // Store detailed results in metadata if needed
+            result.metadata = result.metadata || {};
+            result.metadata.mlAnalysis = result.metadata.mlAnalysis || {};
+            result.metadata.mlAnalysis[pluginName] = pluginResponse;
+          }
+        } catch (pluginError) {
+          if (this.options.debug) {
+            console.error(`Error running ML plugin ${pluginName}:`, pluginError);
+          }
+        }
+      }
     }
   }
-  
-  // Fallback to simple system
-  if (!guard) {
-    guard = new SimpleFallbackGuard({
-      threshold: variant === 'large' ? 4 : variant === 'turbo' ? 6 : 5,
-      debug: options.debug,
-      ...options
-    })
+} // End of ContentGuard Class
+
+// Cache for guard instances
+let guardCache = new Map();
+
+// Renamed and properly defined factory function
+async function createGuardInstance(variant = 'moderate', options = {}) {
+  const cacheKey = `${variant}-${JSON.stringify(options)}`;
+  if (guardCache.has(cacheKey)) {
+    return guardCache.get(cacheKey);
+  }
+
+  let guardInstance = null; // Changed variable name from 'guard' to 'guardInstance'
+  let GuardSystemClass = null;
+
+  try {
+    const variantMap = {
+      fast: require('./lib/variants/v4-fast.js').ContentGuardV4Fast,
+      balanced: require('./lib/variants/v4-balanced.js').ContentGuardV4Balanced,
+      large: require('./lib/variants/v4-large.js'), // Assuming this is a class
+      turbo: require('./lib/variants/v4-turbo.js').ContentGuardV4Turbo
+    };
+    GuardSystemClass = variantMap[variant] || variantMap.balanced;
+
+    if (GuardSystemClass) {
+      // Check if it's the full module or the class itself (for 'large' variant)
+      if (typeof GuardSystemClass === 'function') {
+        guardInstance = new GuardSystemClass({ ...options, preset: variant });
+      } else if (GuardSystemClass.ContentGuardV4Large) { // Handle cases like 'large' if it exports an object
+        guardInstance = new GuardSystemClass.ContentGuardV4Large({ ...options, preset: variant });
+      } else {
+        throw new Error(`GuardSystemClass for variant '${variant}' is not a constructor.`);
+      }
+    }
+  } catch (error) {
+    if (options.debug) {
+      console.log(`Advanced system for variant '${variant}' not available, using simple fallback: ${error.message}`);
+    }
+  }
+
+  // Fallback to simple system (ContentGuard itself)
+  if (!guardInstance) {
+    // SimpleFallbackGuard was an alias for ContentGuard in the original exports
+    guardInstance = new ContentGuard(variant, {
+      ...options, // User options
+      // Default threshold logic from original code, ensure 'variant' is used correctly
+      threshold: options.threshold || (variant === 'large' ? 4 : variant === 'turbo' ? 6 : 5),
+      debug: options.debug
+    });
     
     if (options.debug) {
-      console.log(`✅ Simple fallback guard initialized (${variant} profile)`)
+      console.log(`✅ Simple fallback guard (ContentGuard) initialized (${variant} profile)`);
     }
   }
   
-  guardCache.set(cacheKey, guard)
-  return guard
+  guardCache.set(cacheKey, guardInstance);
+  return guardInstance;
 }
 
 // Create default instance
-let defaultGuard = null
+let defaultGuard = null;
 
 async function getDefaultGuard() {
   if (!defaultGuard) {
-    defaultGuard = await createGuard('balanced')
+    // Use the new factory function name, force debug true for testing
+    // console.log('[DEBUG] getDefaultGuard: Forcing options.debug = true for createGuardInstance');
+    defaultGuard = await createGuardInstance('balanced', { debug: true });
   }
-  return defaultGuard
+  return defaultGuard;
 }
 
-// Simple API functions
+// Simple API functions that use getDefaultGuard
 async function analyze(input) {
-  const guard = await getDefaultGuard()
-  return guard.analyze(input)
+  const guard = await getDefaultGuard();
+  return guard.analyze(input);
 }
 
 async function isSpam(input) {
-  const guard = await getDefaultGuard()
-  return guard.isSpam(input)
+  const guard = await getDefaultGuard();
+  return guard.isSpam(input);
 }
 
 async function getScore(input) {
-  const guard = await getDefaultGuard()
-  return guard.getScore(input)
+  const guard = await getDefaultGuard();
+  return guard.getScore(input);
 }
 
 // Export everything
@@ -420,10 +562,10 @@ module.exports = {
   analyze,
   isSpam,
   getScore,
-  createGuard,
+  createGuard: createGuardInstance, // Export the new factory function
   
-  // Legacy exports for backward compatibility
-  ContentGuard: SimpleFallbackGuard,
+  // Export ContentGuard class (which serves as the fallback)
+  ContentGuard: ContentGuard,
   
   // Advanced exports (if available)
   get ContentGuardV4Balanced() {

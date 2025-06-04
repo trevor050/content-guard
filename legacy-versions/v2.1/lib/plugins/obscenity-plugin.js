@@ -43,7 +43,7 @@ class ObscenityPlugin {
           ...englishRecommendedTransformers,
         })
 
-        console.log('🛡️ Obscenity: Global dataset cache initialized')
+        console.error('🛡️ Obscenity: Global dataset cache initialized')
       } catch (error) {
         console.warn('Obscenity library not available:', error.message)
         globalMatcher = this.createFallbackMatcher()
