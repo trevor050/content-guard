@@ -18,7 +18,7 @@ program
 program
   .argument('<text>', 'Text to analyze')
   .option('-p, --preset <preset>', 'Use preset configuration (strict, moderate, lenient, gaming, professional)', 'moderate')
-  .option('-v, --variant <variant>', 'Use v4.5 variant (fast, balanced, large, turbo)', 'balanced')
+  .option('-v, --variant <variant>', 'Use v4.7 variant (fast, balanced, large, turbo)', 'balanced')
   .option('-t, --threshold <number>', 'Custom spam threshold', parseFloat)
   .option('-e, --explain', 'Show detailed explanation of the analysis')
   .option('-j, --json', 'Output results as JSON')
@@ -35,7 +35,7 @@ program
         process.exit(1)
       }
       
-      // v4.5 variants have their own optimized configurations
+      // v4.7 variants have their own optimized configurations
       // Only apply basic user overrides, not legacy presets
       let config = {
         debug: options.debug || false
@@ -59,7 +59,7 @@ program
       }
       
       // Display results
-      console.log(chalk.bold('\n🛡️  ContentGuard v4.5 Analysis Results'))
+      console.log(chalk.bold('\n🛡️  ContentGuard v4.7 Analysis Results'))
       console.log('=' .repeat(60))
       console.log(`🚀 Variant: ${chalk.cyan(options.variant.toUpperCase())}`)
       console.log();
@@ -217,7 +217,7 @@ program
     })
     
     console.log(`\n${chalk.bold('🎛️  Available Options:')}`)
-    console.log('  --variant <name>    Use v4.5 variant (fast, balanced, large, turbo)')
+    console.log('  --variant <name>    Use v4.7 variant (fast, balanced, large, turbo)')
     console.log('  --preset <name>     Use predefined configuration')
     console.log('  --threshold <num>   Set custom spam threshold')
     console.log('  --explain           Show detailed detection breakdown')
@@ -226,7 +226,7 @@ program
     console.log('  --json              Output raw JSON (for automation)')
     console.log('  --debug             Enable debug mode')
     
-    console.log(`\n${chalk.bold('🚀 v4.5 Variants:')}`)
+    console.log(`\n${chalk.bold('🚀 v4.7 Variants:')}`)
     console.log('  • fast       - Ultra-fast analysis (~0.05ms, 90%+ accuracy)')
     console.log('  • balanced   - Optimal speed/accuracy balance (~0.3ms, 93%+ accuracy)')
     console.log('  • large      - Maximum accuracy (~1.5ms, 94%+ accuracy)')
@@ -289,7 +289,7 @@ program
   .option('-i, --iterations <number>', 'Number of iterations', '100')
   .option('-v, --variant <variant>', 'Test specific variant (fast, balanced, large, turbo)', 'all')
   .action(async (options) => {
-    console.log(chalk.bold('\n🚀 ContentGuard v4.5 Performance Benchmark'))
+    console.log(chalk.bold('\n🚀 ContentGuard v4.7 Performance Benchmark'))
     console.log('=' .repeat(50))
     
     const iterations = parseInt(options.iterations)
