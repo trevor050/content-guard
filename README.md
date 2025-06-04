@@ -1,61 +1,31 @@
-# ContentGuard v4.7
+# ContentGuard
 
-**Ultra-simple content analysis with bulletproof fallbacks. Just works, no configuration needed.**
+ContentGuard is a minimal content moderation utility that analyzes text and returns a simple spam score.
 
-## 🚀 Quick Start (Zero Config)
-
-ContentGuard v4.7 introduces a breakthrough 3-tier computational analysis system that delivers enterprise-grade content moderation with **67.7% accuracy** (11.1 percentage points better than v3.0) and **ultra-fast 0.3ms performance** (97% faster than v3.0) through progressive computational escalation.
-
-## 🏃 TL;DR Quick Start
-
-```bash
-npm install content-guard@4.7
-npx contentguard "Hello world"
-```
-
-Then explore the [Full Quick Start](#-quick-start) for more details.
+## Installation
 
 ```bash
 npm install content-guard
 ```
 
-### Super Simple API
+## Usage
 
 ```javascript
 const { analyze, isSpam, getScore } = require('content-guard');
 
-// Simple text analysis (returns 0-10 score)
-const result = await analyze('Hello world!');
-console.log(result.isSpam);    // false
-console.log(result.score);     // 0
-console.log(result.confidence); // 0.9
-
-// Detect obvious spam
-const spamResult = await analyze('you should kill yourself');
-console.log(spamResult.isSpam); // true
-console.log(spamResult.score);  // 10
-console.log(spamResult.riskLevel); // 'CRITICAL'
-
-// Quick spam check
-const isSpamResult = await isSpam('some text'); // returns true/false
-const scoreOnly = await getScore('some text');  // returns 0-10
+(async () => {
+  const result = await analyze('Hello world');
+  console.log(result.isSpam); // false
+})();
 ```
 
-### Multi-Field Analysis (Contact Forms, etc.)
+### API
 
-```javascript
-// Analyze entire contact forms
-const result = await analyze({
-  name: "John Doe",
-  email: "john@example.com", 
-  subject: "Question about your service",
-  message: "I have a question about pricing..."
-});
+- **analyze(text)** -> `{ isSpam: boolean, score: number }`
+- **isSpam(text)** -> `boolean`
+- **getScore(text)** -> `number`
 
-console.log(result.isSpam);    // false
-console.log(result.score);     // 0
-console.log(result.fields);    // Shows which fields were analyzed
-```
+## License
 
 ## 🛡️ Bulletproof Design
 

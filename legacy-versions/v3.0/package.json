@@ -1,0 +1,145 @@
+{
+  "name": "content-guard",
+  "version": "3.0.0",
+  "description": "Next-generation content analysis system with advanced harassment detection, context intelligence, and adversarial attack resistance for enterprise applications",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "sideEffects": false,
+  "bin": {
+    "contentguard": "./cli/analyze.js"
+  },
+  "scripts": {
+    "test": "node tests/test.js",
+    "test-cli": "node cli/test-runner.js",
+    "test:context": "node tests/context-test.js",
+    "test:harassment": "node tests/harassment-test.js",
+    "example": "node examples/basic-usage.js",
+    "lint": "echo 'Linting...' && node -c index.js",
+    "validate": "npm run lint && npm run test",
+    "benchmark": "node tests/massive-benchmark-v3.js",
+    "benchmark:v2": "node benchmark.js",
+    "performance": "node tests/performance-test.js",
+    "docs": "typedoc --out docs index.js lib/ --readme README.md",
+    "build": "npm run validate && npm run benchmark",
+    "prepublishOnly": "npm run validate && npm run benchmark"
+  },
+  "keywords": [
+    "content-moderation",
+    "harassment-detection",
+    "context-aware",
+    "spam-filter",
+    "toxicity-detection",
+    "text-analysis",
+    "workplace-harassment",
+    "power-dynamics",
+    "gaslighting-detection",
+    "microaggressions",
+    "social-exclusion",
+    "veiled-threats",
+    "adversarial-resistance",
+    "unicode-normalization",
+    "leetspeak-detection",
+    "professional-context",
+    "technical-communications",
+    "business-intelligence",
+    "medical-communications",
+    "academic-research",
+    "profanity-filter",
+    "sentiment-analysis",
+    "troll-detection",
+    "nlp",
+    "security",
+    "contact-form",
+    "user-content",
+    "comment-moderation",
+    "content-guard",
+    "ai-moderation",
+    "plugin-system",
+    "modular",
+    "performance",
+    "lightweight",
+    "typescript",
+    "esm",
+    "tree-shakeable",
+    "enterprise-grade",
+    "production-ready"
+  ],
+  "author": {
+    "name": "ContentGuard Contributors",
+    "email": "contact@content-guard.dev"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trevor050/content-guard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/trevor050/content-guard/issues"
+  },
+  "homepage": "https://github.com/trevor050/content-guard#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "bad-words": "^3.0.4",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "franc-min": "^6.1.0",
+    "obscenity": "^0.4.3",
+    "wink-sentiment": "^5.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typedoc": "^0.25.0"
+  },
+  "optionalDependencies": {
+    "compromise": "^14.14.4",
+    "inquirer": "^8.2.6",
+    "keyword-extractor": "^0.0.25",
+    "leven": "^3.1.0",
+    "ora": "^5.4.1",
+    "porter-stemmer": "^0.9.1",
+    "validator": "^13.15.15"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "lib/",
+    "cli/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "FINAL_IMPROVEMENTS_SUMMARY.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.js"
+    },
+    "./plugins": {
+      "types": "./lib/plugins/index.d.ts",
+      "import": "./lib/plugins/index.js"
+    },
+    "./plugins/*": {
+      "types": "./lib/plugins/*.d.ts",
+      "import": "./lib/plugins/*"
+    },
+    "./utils": {
+      "types": "./lib/utils/index.d.ts",
+      "import": "./lib/utils/index.js"
+    },
+    "./constants": {
+      "types": "./lib/constants/index.d.ts",
+      "import": "./lib/constants/context-data.js"
+    },
+    "./presets": {
+      "types": "./lib/presets/index.d.ts",
+      "import": "./lib/presets/index.js"
+    }
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/content-guard"
+  }
+}
