@@ -260,8 +260,7 @@ async function createGuard(variant = 'balanced', options = {}) {
       fast: require('./lib/variants/v4-fast.js').ContentGuardV4Fast,
       balanced: require('./lib/variants/v4-balanced.js').ContentGuardV4Balanced,
       large: require('./lib/variants/v4-large.js'),
-      turbo: require('./lib/variants/v4-turbo.js').ContentGuardV4Turbo,
-      ultra: require('./lib/variants/v4-ultra.js').ContentGuardV47Ultra
+      turbo: require('./lib/variants/v4-turbo.js').ContentGuardV4Turbo
     }
     GuardClass = variantMap[variant] || variantMap.balanced
   } catch (error) {
@@ -353,13 +352,6 @@ module.exports = {
   get ContentGuardV4Balanced() {
     try {
       return require('./lib/variants/v4-balanced').ContentGuardV4Balanced
-    } catch {
-      return SimpleFallbackGuard
-    }
-  },
-  get ContentGuardV47Ultra() {
-    try {
-      return require('./lib/variants/v4-ultra').ContentGuardV47Ultra
     } catch {
       return SimpleFallbackGuard
     }

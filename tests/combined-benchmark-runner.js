@@ -13,7 +13,6 @@
  * - v4.7-balanced
  * - v4.7-turbo
  * - v4.7-large
- * - v4.7-ultra
  *
  * Provides comparative analysis and combined results
  */
@@ -68,8 +67,8 @@ class CombinedBenchmarkRunner {
           linguisticFingerprinting: 35.88541648014674,
           crossCultural: 11.705793103891548
         }
-      },
-      'v4.7-ultra': { type: 'variant', variant: 'ultra', debug: false, enableCaching: false }
+      }
+
     }
 
     // Start with the full default set. This ensures turbo is always part of the
@@ -347,11 +346,6 @@ class CombinedBenchmarkRunner {
         case 'turbo': {
           const { ContentGuardV4Turbo } = require('../lib/variants/v4-turbo.js')
           guard = new ContentGuardV4Turbo(variantOptions)
-          break
-        }
-        case 'ultra': {
-          const { ContentGuardV47Ultra } = require('../lib/variants/v4-ultra.js')
-          guard = new ContentGuardV47Ultra(variantOptions)
           break
         }
         default:

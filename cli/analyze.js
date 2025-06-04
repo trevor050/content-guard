@@ -18,7 +18,7 @@ program
 program
   .argument('<text>', 'Text to analyze')
   .option('-p, --preset <preset>', 'Use preset configuration (strict, moderate, lenient, gaming, professional)', 'moderate')
-  .option('-v, --variant <variant>', 'Use v4.7 variant (fast, balanced, large, turbo, ultra)', 'balanced')
+  .option('-v, --variant <variant>', 'Use v4.7 variant (fast, balanced, large, turbo)', 'balanced')
   .option('-t, --threshold <number>', 'Custom spam threshold', parseFloat)
   .option('-e, --explain', 'Show detailed explanation of the analysis')
   .option('-j, --json', 'Output results as JSON')
@@ -31,7 +31,7 @@ program
       const validVariants = ['fast', 'balanced', 'large', 'turbo']
       if (!validVariants.includes(options.variant.toLowerCase())) {
         console.error(chalk.red(`❌ Unknown variant: ${options.variant}`))
-        console.log(chalk.yellow('Available variants: fast, balanced, large, turbo, ultra'))
+        console.log(chalk.yellow('Available variants: fast, balanced, large, turbo'))
         process.exit(1)
       }
       
@@ -217,7 +217,7 @@ program
     })
     
     console.log(`\n${chalk.bold('🎛️  Available Options:')}`)
-    console.log('  --variant <name>    Use v4.7 variant (fast, balanced, large, turbo, ultra)')
+    console.log('  --variant <name>    Use v4.7 variant (fast, balanced, large, turbo)')
     console.log('  --preset <name>     Use predefined configuration')
     console.log('  --threshold <num>   Set custom spam threshold')
     console.log('  --explain           Show detailed detection breakdown')
@@ -231,7 +231,6 @@ program
     console.log('  • balanced   - Optimal speed/accuracy balance (~0.3ms, 93%+ accuracy)')
     console.log('  • large      - Maximum accuracy (~1.5ms, 94%+ accuracy)')
     console.log('  • turbo      - Extreme speed (~0.02ms, 91%+ accuracy)')
-    console.log('  • ultra      - Experimental high accuracy (slow)')
     
     console.log(`\n${chalk.bold('🎯 Available presets:')}`)
     console.log('  • strict       - High sensitivity, low tolerance (threshold: 3)')
@@ -288,7 +287,7 @@ program
   .command('benchmark')
   .description('Run performance benchmark')
   .option('-i, --iterations <number>', 'Number of iterations', '100')
-  .option('-v, --variant <variant>', 'Test specific variant (fast, balanced, large, turbo, ultra)', 'all')
+  .option('-v, --variant <variant>', 'Test specific variant (fast, balanced, large, turbo)', 'all')
   .action(async (options) => {
     console.log(chalk.bold('\n🚀 ContentGuard v4.7 Performance Benchmark'))
     console.log('=' .repeat(50))

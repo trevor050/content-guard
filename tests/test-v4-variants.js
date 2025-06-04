@@ -8,7 +8,6 @@
  * - v4.7-balanced: Optimal speed-accuracy tradeoff
  * - v4.7-large: Maximum accuracy with comprehensive analysis
  * - v4.7-turbo: Extreme speed variant for real-time
- * - v4.7-ultra: Experimental high-accuracy preview
  * - v4.0-base: Original base ContentGuard v4.0
  * 
  * Provides detailed performance comparison including:
@@ -29,7 +28,6 @@ const { ContentGuardV4Fast } = require('../lib/variants/v4-fast.js')
 const { ContentGuardV4Balanced } = require('../lib/variants/v4-balanced.js')
 const ContentGuardV4Large = require('../lib/variants/v4-large.js')
 const { ContentGuardV4Turbo } = require('../lib/variants/v4-turbo.js')
-const { ContentGuardV47Ultra } = require('../lib/variants/v4-ultra.js')
 
 // Import the test cases from MassiveBenchmarkV4 class
 const { MassiveBenchmarkV4 } = require('./massive-benchmark-v3.js')
@@ -72,12 +70,6 @@ class ContentGuardV4VariantTester {
 
     // v4.7 Large variant
     this.variants['v4.7-large'] = new ContentGuardV4Large({
-      debug: false,
-      enableCaching: false
-    })
-
-    // v4.7 Ultra preview variant
-    this.variants['v4.7-ultra'] = new ContentGuardV47Ultra({
       debug: false,
       enableCaching: false
     })
