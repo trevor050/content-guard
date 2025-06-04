@@ -1,4 +1,4 @@
-# ContentGuard v4.0
+# ContentGuard v4.7
 
 **Revolutionary Tiered Content Analysis System with Ultra-Fast Performance and Maximum Accuracy**
 
@@ -6,7 +6,16 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js CI](https://github.com/trevor050/content-guard/workflows/Node.js%20CI/badge.svg)](https://github.com/trevor050/content-guard/actions)
 
-ContentGuard v4.0 introduces a breakthrough 3-tier computational analysis system that delivers enterprise-grade content moderation with **67.7% accuracy** (11.1 percentage points better than v3.0) and **ultra-fast 0.3ms performance** (97% faster than v3.0) through progressive computational escalation.
+ContentGuard v4.7 introduces a breakthrough 3-tier computational analysis system that delivers enterprise-grade content moderation with **67.7% accuracy** (11.1 percentage points better than v3.0) and **ultra-fast 0.3ms performance** (97% faster than v3.0) through progressive computational escalation.
+
+## 🏃 TL;DR Quick Start
+
+```bash
+npm install content-guard@4.7
+npx contentguard "Hello world"
+```
+
+Then explore the [Full Quick Start](#-quick-start) for more details.
 
 ## 🎯 Performance Achievements
 
@@ -39,7 +48,7 @@ ContentGuard v4.0 introduces a breakthrough 3-tier computational analysis system
 
 ## 🚀 Massive Performance Improvements Over v3.0
 
-| Metric | v3.0 | v4.0 | Improvement |
+| Metric | v3.0 | v4.7 | Improvement |
 |--------|------|------|-------------|
 | Overall Accuracy | 56.6% | **67.7%** | +11.1pp (+19.6%) |
 | Average Speed | 28.5ms | **0.3-0.8ms** | **97% faster** |
@@ -47,21 +56,21 @@ ContentGuard v4.0 introduces a breakthrough 3-tier computational analysis system
 | Workplace Harassment | 90.6% | 87.5% | -3.1pp (minor) |
 | False Positives | 4 | 5 | +1 (acceptable) |
 
-**v4.0 beats v3.0 in the most important metrics while delivering revolutionary speed improvements!**
+**v4.7 beats v3.0 in the most important metrics while delivering revolutionary speed improvements!**
 
 ## 📦 Installation
 
 ```bash
-npm install content-guard
+npm install content-guard@4.7
 ```
 
 ## 🚀 Quick Start
 
-### Simple Usage (v4.0 Default)
+### Simple Usage (v4.7 Default)
 ```javascript
 const { ContentGuard } = require('content-guard')
 
-// Initialize with v4.0 optimized defaults
+// Initialize with v4.7 optimized defaults
 const guard = new ContentGuard()
 
 const result = await guard.analyze({
@@ -86,11 +95,18 @@ console.log(result)
 // }
 ```
 
+### CLI Quick Start
+```bash
+npx contentguard "Hello world"
+```
+
+Run `npx contentguard --help` for more options.
+
 ### Production Tiered System (Recommended)
 ```javascript
 const { ProductionTieredSystem } = require('content-guard/production')
 
-// Initialize v4.0 production system
+// Initialize v4.7 production system
 const tieredGuard = new ProductionTieredSystem({
   enableTier3: true, // User-controlled ML analysis
   escalationStrategy: 'balanced' // or 'conservative', 'aggressive'
@@ -205,7 +221,7 @@ tieredGuard.disableTier3() // Cost optimization
 tieredGuard.setEscalationStrategy('aggressive') // More sensitive
 ```
 
-### Professional Presets (Enhanced for v4.0)
+### Professional Presets (Enhanced for v4.7)
 ```javascript
 const { presets } = require('content-guard')
 
@@ -240,7 +256,7 @@ const gamingGuard = new ContentGuard(presets.gaming)
 
 ## 📊 Performance Metrics
 
-### Speed Benchmarks (v4.0 vs v3.0)
+### Speed Benchmarks (v4.7 vs v3.0)
 - **Tier 1 Processing**: 0.3ms (target achieved)
 - **Tier 2 Processing**: 0.5ms (enhanced detection)
 - **Tier 3 Processing**: 0.8ms (ML-powered analysis)
@@ -270,6 +286,9 @@ npm run test:tiered
 
 # Performance benchmarking
 npm run benchmark
+
+# Run intensive benchmark suite
+npm run benchmark:hard
 
 # Context awareness testing
 npm run test:context
@@ -321,7 +340,7 @@ tieredGuard.setEscalationStrategy('conservative')
   confidence: string,
   flags: string[],
   
-  // v4.0 Tiered analysis metadata
+  // v4.7 Tiered analysis metadata
   tieredAnalysis: {
     usedTier: 1|2|3,
     escalationReason: string|null,
@@ -348,7 +367,7 @@ tieredGuard.setEscalationStrategy('conservative')
 }
 ```
 
-## 🌟 What's New in v4.0
+## 🌟 What's New in v4.7
 
 ### Revolutionary Features
 - **3-Tier Progressive Analysis** - Optimal compute/accuracy tradeoffs
@@ -373,7 +392,7 @@ tieredGuard.setEscalationStrategy('conservative')
 
 ## 🏆 Industry Recognition
 
-ContentGuard v4.0 represents a breakthrough in content analysis technology, delivering the industry's first production-ready tiered computational system that achieves both ultra-fast performance and high accuracy through intelligent progressive escalation. The revolutionary architecture provides enterprise-grade scalability while maintaining the sophisticated detection capabilities that made v3.0 industry-leading.
+ContentGuard v4.7 represents a breakthrough in content analysis technology, delivering the industry's first production-ready tiered computational system that achieves both ultra-fast performance and high accuracy through intelligent progressive escalation. The revolutionary architecture provides enterprise-grade scalability while maintaining the sophisticated detection capabilities that made v3.0 industry-leading.
 
 ## 🤝 Contributing
 
@@ -400,4 +419,4 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**ContentGuard v4.0** - Where ultra-fast performance meets maximum accuracy through intelligent computational tiering. 🚀 
+**ContentGuard v4.7** - Where ultra-fast performance meets maximum accuracy through intelligent computational tiering. 🚀 

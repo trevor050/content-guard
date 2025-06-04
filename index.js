@@ -1,12 +1,12 @@
 /**
- * 🛡️ ContentGuard v3.0 - Next-Generation Content Analysis System
+ * 🛡️ ContentGuard v4.7 - Next-Generation Content Analysis System
  * 
  * Revolutionary content analysis with sophisticated harassment detection,
  * advanced context awareness, and adversarial attack resistance.
  * 
  * @author ContentGuard Contributors
  * @license MIT
- * @version 3.0.0
+ * @version 4.7.0
  */
 
 const PluginManager = require('./lib/core/plugin-manager')
@@ -21,7 +21,7 @@ let SentimentPlugin = null
 let HarassmentPlugin = null
 let SocialEngineeringPlugin = null
 
-// v4.0 ML Plugins
+// v4.7 ML Plugins
 const { EmojiSentimentPlugin } = require('./lib/plugins/emoji-sentiment-plugin')
 const { ConfusablesAdvancedPlugin } = require('./lib/plugins/confusables-advanced-plugin')
 const { MLToxicityPlugin } = require('./lib/plugins/ml-toxicity-plugin')
@@ -42,7 +42,7 @@ class ContentGuard {
       enableContextDetection: true,
       enableHarassmentDetection: true,
       enableSocialEngineering: true,
-      enableMLFeatures: true, // NEW: Enable v4.0 ML features
+      enableMLFeatures: true, // NEW: Enable v4.7 ML features
       enableEmojiAnalysis: true, // NEW: Emoji sentiment
       enableCrossCultural: true, // NEW: Cross-cultural analysis
       maxProcessingTime: 10000, // 10 second timeout
@@ -76,9 +76,9 @@ class ContentGuard {
 
   async initializeMLPlugins() {
     try {
-      // v4.0 ML Plugins
+      // v4.7 ML Plugins
       if (this.options.enableMLFeatures) {
-        console.log('🤖 Initializing v4.0 ML plugins...')
+        console.log('🤖 Initializing v4.7 ML plugins...')
         
         // Emoji sentiment analysis
         if (this.options.enableEmojiAnalysis) {
@@ -101,7 +101,7 @@ class ContentGuard {
         await this.mlPlugins.mlToxicity.initialize()
         console.log('✅ ML toxicity plugin ready')
         
-        console.log('🚀 All v4.0 ML plugins initialized successfully')
+        console.log('🚀 All v4.7 ML plugins initialized successfully')
       }
     } catch (error) {
       console.warn('⚠️ Some ML plugins failed to initialize:', error.message)
@@ -649,7 +649,7 @@ class ContentGuard {
         return this.createResult(0, [], { error: 'Invalid input text' })
       }
 
-      // Enhanced preprocessing with v4.0 confusables
+      // Enhanced preprocessing with v4.7 confusables
       const preprocessingResult = this.preprocessor.preprocess(allText, {
         ...this.options.preprocessing,  // Pass user's preprocessing options
         useAdvancedConfusables: true
@@ -694,7 +694,7 @@ class ContentGuard {
       // Core analysis pipeline
       await this.runCoreAnalysis(content, context, result)
       
-      // v4.0 ML analysis pipeline
+      // v4.7 ML analysis pipeline
       if (this.options.enableMLFeatures) {
         await this.runMLAnalysis(processedText, context, result)
       }
@@ -826,7 +826,7 @@ class ContentGuard {
       metadata: metadata || {},
       preprocessingApplied: metadata?.preprocessing?.applied,  // NEW: Show if preprocessing worked
       normalizedText: metadata?.processedText?.substring(0, 100),  // NEW: Show normalized text sample
-      version: '4.0.0',
+      version: '4.7.0',
       timestamp: new Date().toISOString(),
       performance: {
         averageAnalysisTime: this.stats.averageTime,
@@ -863,10 +863,10 @@ class ContentGuard {
     return Math.round(confidence * 100) / 100
   }
 
-  // v4.0 Analytics and insights
+  // v4.7 Analytics and insights
   getAnalyticsReport() {
     return {
-      version: '4.0.0',
+      version: '4.7.0',
       totalAnalyses: this.stats.totalAnalyses,
       performance: {
         averageTime: `${this.stats.averageTime.toFixed(2)}ms`,
