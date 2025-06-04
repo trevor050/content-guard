@@ -1,6 +1,6 @@
 {
   "name": "content-guard",
-  "version": "4.7.0",
+  "version": "4.7.1",
   "description": "Revolutionary 3-tier content analysis system with ultra-fast performance (0.3ms) and maximum accuracy (67.7%) through progressive computational escalation",
   "main": "index.js",
   "types": "index.d.ts",
