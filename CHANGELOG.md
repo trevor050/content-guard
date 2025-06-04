@@ -3,6 +3,14 @@
 All notable changes to ContentGuard will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+## [4.7.0] - 2025-06-04
+### Added
+- Combined benchmark runner (`npm run benchmark:hard`)
+- CLI quick start instructions
+### Changed
+- Await plugin initialization and gracefully handle failures
+- Simplified README examples and installation notes
+
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [4.0.0] - 2024-02-XX
