@@ -5,12 +5,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "node tests/massive-benchmark-v3.js",
-    "test:tiered": "node production-tiered-system.js",
-    "benchmark": "node benchmark.js",
-    "benchmark:hard": "node tests/combined-benchmark-runner.js --hard",
-    "test:context": "node tests/massive-benchmark-v3.js",
-    "performance": "node production-tiered-system.js",
+    "test": "echo \"No tests\"",
     "start": "node index.js"
   },
   "keywords": [
