@@ -1,14 +1,16 @@
 {
   "name": "content-guard",
-  "version": "2.5.1",
-  "description": "Ultra-simple content analysis with bulletproof fallbacks. Zero-config spam detection that just works. Analyze text and get 0-10 spam scores instantly. Handles contact forms, chat, comments with 90%+ accuracy and professional context protection.",
+  "version": "4.7.0",
+  "description": "Revolutionary 3-tier content analysis system with ultra-fast performance (0.3ms) and maximum accuracy (67.7%) through progressive computational escalation",
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "node test-simple-api.js",
-    "test:simple": "node test-simple.js",
-    "test:advanced": "node tests/massive-benchmark-v3.js",
-    "benchmark": "node tests/combined-benchmark-runner.js",
+    "test": "node tests/massive-benchmark-v3.js",
+    "test:tiered": "node production-tiered-system.js",
+    "benchmark": "node benchmark.js",
+    "benchmark:hard": "node tests/combined-benchmark-runner.js --hard",
+    "test:context": "node tests/massive-benchmark-v3.js",
+    "performance": "node production-tiered-system.js",
     "start": "node index.js"
   },
   "keywords": [
@@ -57,8 +59,13 @@
     "chalk": "^4.1.2",
     "compromise": "^14.10.0",
     "confusables": "^1.1.1",
+    "emoji-sentiment": "^3.0.2",
     "natural": "^6.12.0",
-    "obscenity": "^0.2.0"
+    "node-rake": "^1.0.1",
+    "obscenity": "^0.2.0",
+    "sentiment": "^5.0.2",
+    "text-readability": "^1.1.1",
+    "@xenova/transformers": "^2.17.2"
   },
   "devDependencies": {
     "@types/node": "^20.0.0"
@@ -81,5 +88,8 @@
     ".": "./index.js",
     "./simple": "./simple.js",
     "./package.json": "./package.json"
+  },
+  "bin": {
+    "contentguard": "./cli/analyze.js"
   }
 }

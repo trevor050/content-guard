@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * ContentGuard CLI Tool v2.1
+ * ContentGuard CLI Tool v4.7
  * 
  * Enhanced command-line interface for content analysis with detailed explanations
  */
@@ -13,7 +13,7 @@ const chalk = require('chalk')
 program
   .name('contentguard')
   .description('Analyze content for spam, toxicity, and harassment')
-  .version('4.5.0')
+  .version('4.7.0')
 
 program
   .argument('<text>', 'Text to analyze')

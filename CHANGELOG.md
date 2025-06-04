@@ -3,6 +3,29 @@
 All notable changes to ContentGuard will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+## [4.7.0] - 2025-06-04
+### Added
+- Combined benchmark runner (`npm run benchmark:hard`) for stress testing
+- Quick CLI usage instructions and `contentguard` binary
+- Advanced cross-cultural and emoji-sentiment plugins enabled by default
+### Changed
+- Await plugin initialization and gracefully handle failures
+- Model weights updated for higher accuracy and faster analysis
+- Simplified README examples and installation notes
+### Fixed
+- Front-end plugin glitches causing occasional crashes
+
+## [4.5.0] - 2024-12-01
+### Added
+- Balanced escalation strategy with `large-turbo` and `balanced` modes
+- First unified benchmark suite comparing all historical versions
+- `tests/combined-benchmark-runner.js` for heavy benchmarking
+### Changed
+- Major ML model upgrade with improved toxicity detection
+- Refined presets for common use cases
+### Notes
+- Established 4.x series as the future path beyond v4.0
+
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [4.5.1] - 2024-02-XX

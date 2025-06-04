@@ -1,39 +1,51 @@
 /**
- * 🛡️ ContentGuard v4.7 - Ultimate Anti-Troll System
+ * 🛡️ ContentGuard v4.7 - Next-Generation Content Analysis System
  * 
  * Super Simple API - Just analyze text and get a spam score from 0-10
  * 
- * Usage:
- *   const { analyze, isSpam, createGuard } = require('content-guard')
- *   
- *   // Quick analysis
- *   const result = await analyze("Hello world")
- *   console.log(result.isSpam)     // false
- *   console.log(result.score)      // 0-10 scale
- *   console.log(result.confidence) // 0-1 scale
- *   
- *   // Multi-field analysis (contact forms, etc.)
- *   const result = await analyze({
- *     name: "John Doe",
- *     email: "john@example.com", 
- *     subject: "Question about your service",
- *     message: "I have a question..."
- *   })
- *   
- *   // Quick spam check
- *   const spam = await isSpam("you should kill yourself") // true
- *   
- *   // Different variants for different needs
- *   const fastGuard = createGuard('fast')    // 0.05ms, 90% accuracy  
- *   const guard = createGuard('balanced')    // 0.3ms, 93% accuracy (default)
- *   const preciseGuard = createGuard('large') // 1.5ms, 94% accuracy
+ * @author ContentGuard Contributors
+ * @license MIT
+ * @version 4.7.0
  */
 
-// Ultra-simple fallback system that works without any dependencies
-class SimpleFallbackGuard {
-  constructor(options = {}) {
-    this.threshold = options.threshold || 5
-    this.debug = options.debug || false
+const PluginManager = require('./lib/core/plugin-manager')
+const { LRUCache, deepMerge, fastHash, safeRegexTest } = require('./lib/utils')
+const { TextPreprocessor } = require('./lib/utils/preprocessing')
+const { ContextDetector } = require('./lib/core/context-detector')
+const presets = require('./lib/presets')
+
+// Lazy-loaded plugins
+let ObscenityPlugin = null
+let SentimentPlugin = null
+let HarassmentPlugin = null
+let SocialEngineeringPlugin = null
+
+// v4.7 ML Plugins
+const { EmojiSentimentPlugin } = require('./lib/plugins/emoji-sentiment-plugin')
+const { ConfusablesAdvancedPlugin } = require('./lib/plugins/confusables-advanced-plugin')
+const { MLToxicityPlugin } = require('./lib/plugins/ml-toxicity-plugin')
+const { CrossCulturalPlugin } = require('./lib/plugins/cross-cultural-plugin')
+
+/**
+ * ContentGuard v3.0 - The most advanced content analysis system
+ */
+class ContentGuard {
+  constructor(preset = 'moderate', options = {}) {
+    this.preset = preset
+    
+    // Merge preset configuration with user options
+    const presetConfig = presets[preset] || presets.moderate
+    this.options = this.mergeDefaultOptions({
+      ...presetConfig,
+      ...options,
+      enableContextDetection: true,
+      enableHarassmentDetection: true,
+      enableSocialEngineering: true,
+      enableMLFeatures: true, // NEW: Enable v4.7 ML features
+      enableEmojiAnalysis: true, // NEW: Emoji sentiment
+      enableCrossCultural: true, // NEW: Cross-cultural analysis
+      maxProcessingTime: 10000, // 10 second timeout
+    })
     
     // Simple but effective spam patterns
     this.spamPatterns = [
@@ -81,23 +93,32 @@ class SimpleFallbackGuard {
     const startTime = Date.now()
     
     try {
-      // Handle both string and object input
-      let text = ''
-      let fields = {}
-      
-      if (typeof input === 'string') {
-        text = input
-        fields = { message: input }
-      } else if (input && typeof input === 'object') {
-        fields = {
-          name: input.name || '',
-          email: input.email || '',
-          subject: input.subject || '',
-          message: input.message || input.text || input.content || ''
+      // v4.7 ML Plugins
+      if (this.options.enableMLFeatures) {
+        console.log('🤖 Initializing v4.7 ML plugins...')
+        
+        // Emoji sentiment analysis
+        if (this.options.enableEmojiAnalysis) {
+          this.mlPlugins.emojiSentiment = new EmojiSentimentPlugin()
+          console.log('✅ Emoji sentiment plugin ready')
         }
-        text = Object.values(fields).filter(Boolean).join(' ')
-      } else {
-        throw new Error('Input must be a string or object')
+        
+        // Advanced confusables (always enabled for preprocessing)
+        this.mlPlugins.confusablesAdvanced = new ConfusablesAdvancedPlugin()
+        console.log('✅ Advanced confusables plugin ready')
+        
+        // Cross-cultural analysis
+        if (this.options.enableCrossCultural) {
+          this.mlPlugins.crossCultural = new CrossCulturalPlugin()
+          console.log('✅ Cross-cultural analysis plugin ready')
+        }
+        
+        // ML toxicity detection (async initialization)
+        this.mlPlugins.mlToxicity = new MLToxicityPlugin()
+        await this.mlPlugins.mlToxicity.initialize()
+        console.log('✅ ML toxicity plugin ready')
+        
+        console.log('🚀 All v4.7 ML plugins initialized successfully')
       }
       
       if (!text || text.trim().length === 0) {
@@ -144,19 +165,61 @@ class SimpleFallbackGuard {
         totalScore += 3
         flags.push(`Multiple emails detected (${emailCount})`)
       }
-      
-      const urlCount = (text.match(/https?:\/\/\S+/g) || []).length
-      if (urlCount > 2) {
-        totalScore += 2
-        flags.push(`Multiple URLs detected (${urlCount})`)
+
+      // Create combined text for analysis
+      const allText = [input.name, input.email, input.subject, input.message]
+        .filter(Boolean)
+        .join(' ')
+
+      if (!allText || allText.trim().length === 0) {
+        return this.createResult(0, [], { error: 'Invalid input text' })
+      }
+
+      // Enhanced preprocessing with v4.7 confusables
+      const preprocessingResult = this.preprocessor.preprocess(allText, {
+        ...this.options.preprocessing,  // Pass user's preprocessing options
+        useAdvancedConfusables: true
+      })
+      const processedText = preprocessingResult.processedText
+
+      // Create content object for plugins with PREPROCESSED text
+      const content = {
+        name: input.name || '',
+        email: input.email || '',
+        subject: input.subject || '',
+        message: input.message || '',
+        allText: processedText,  // FIXED: Use preprocessed text instead of original
+        allTextLower: processedText.toLowerCase(),  // FIXED: Use preprocessed text
+        originalText: allText  // Keep original for reference
+      }
+
+      // Initialize result structure
+      const result = {
+        score: 0,
+        flags: [],
+        preset: this.preset,
+        metadata: {
+          originalText: allText,
+          processedText: processedText,
+          preprocessing: preprocessingResult.metadata,
+          context: {},
+          harassment: {},
+          socialEngineering: {},
+          obscenity: {},
+          mlAnalysis: {}, // NEW: ML analysis results
+          emojiAnalysis: {}, // NEW: Emoji analysis
+          crossCultural: {}, // NEW: Cross-cultural analysis
+          performance: {
+            processingTime: 0,
+            mlProcessingTime: 0,
+            pluginsUsed: []
+          }
+        }
       }
       
-      // Cap score at 10 for simplicity
-      totalScore = Math.min(10, totalScore)
-      
-      // Professional context reporting
-      if (professionalMatches > 0) {
-        flags.push(`Professional context detected (${professionalMatches} terms), scores reduced by ${Math.round(professionalReduction * 100)}%`)
+      // v4.7 ML analysis pipeline
+      if (this.options.enableMLFeatures) {
+        await this.runMLAnalysis(processedText, context, result)
       }
       
       const processingTime = Date.now() - startTime
@@ -246,11 +309,23 @@ class SimpleFallbackGuard {
 // Try to load the advanced v4.7 system, fallback to simple system
 let guardCache = new Map()
 
-async function createGuard(variant = 'balanced', options = {}) {
-  const cacheKey = `${variant}-${JSON.stringify(options)}`
-  
-  if (guardCache.has(cacheKey)) {
-    return guardCache.get(cacheKey)
+    return {
+      isSpam: score >= threshold,
+      score: score,
+      confidence: this.calculateConfidence(score, threshold, metadata),
+      flags: flags,
+      preset: this.preset,
+      metadata: metadata || {},
+      preprocessingApplied: metadata?.preprocessing?.applied,  // NEW: Show if preprocessing worked
+      normalizedText: metadata?.processedText?.substring(0, 100),  // NEW: Show normalized text sample
+      version: '4.7.0',
+      timestamp: new Date().toISOString(),
+      performance: {
+        averageAnalysisTime: this.stats.averageTime,
+        totalAnalyses: this.stats.totalAnalyses,
+        mlSuccessRate: this.stats.mlSuccessRate
+      }
+    }
   }
   
   // Try to load advanced system first
@@ -269,26 +344,28 @@ async function createGuard(variant = 'balanced', options = {}) {
     }
   }
 
-  let guard
-
-  if (GuardClass) {
-    try {
-      // Try to create advanced guard
-      guard = new GuardClass({
-        variant,
-        debug: false, // Keep it silent by default
-        ...options
-      })
-      
-      // Test that it actually works
-      await guard.analyze('test')
-      
-      if (options.debug) {
-        console.log(`✅ Advanced ContentGuard v4.7-${variant} initialized`)
-      }
-    } catch (error) {
-      if (options.debug) {
-        console.log(`Advanced guard failed, using fallback:`, error.message)
+  // v4.7 Analytics and insights
+  getAnalyticsReport() {
+    return {
+      version: '4.7.0',
+      totalAnalyses: this.stats.totalAnalyses,
+      performance: {
+        averageTime: `${this.stats.averageTime.toFixed(2)}ms`,
+        totalTime: `${this.stats.totalTime}ms`,
+        throughput: `${(this.stats.totalAnalyses / (this.stats.totalTime / 1000)).toFixed(2)} analyses/sec`
+      },
+      mlMetrics: {
+        mlAnalyses: this.stats.mlAnalyses,
+        mlSuccessRate: `${(this.stats.mlSuccessRate * 100).toFixed(1)}%`,
+        mlCoverage: `${((this.stats.mlAnalyses / this.stats.totalAnalyses) * 100).toFixed(1)}%`
+      },
+      features: {
+        enabledPlugins: Object.keys(this.plugins).length,
+        enabledMLPlugins: Object.keys(this.mlPlugins).length,
+        preset: this.preset,
+        mlFeatures: this.options.enableMLFeatures,
+        emojiAnalysis: this.options.enableEmojiAnalysis,
+        crossCultural: this.options.enableCrossCultural
       }
       guard = null
     }
