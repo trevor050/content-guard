@@ -228,7 +228,7 @@ const { createGuard } = require('content-guard');
 const strictGuard = createGuard('balanced', {
   threshold: 3  // Lower threshold = more sensitive
 });
-
+```
 ## 🛡️ Advanced Detection Capabilities
 
 ### Sophisticated Harassment Detection
