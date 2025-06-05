@@ -1,4 +1,4 @@
-# ContentGuard v0.1.0 (Beta)
+# ContentGuard v0.1.1 (Beta)
 
 🛡️ **Advanced Content Analysis System - Pre-1.0 Development Version**
 
@@ -8,13 +8,13 @@ Modern content moderation and spam detection with context-aware analysis, harass
 
 ## 🚀 Quick Start
 
-### InstallationOk
+### Installation
 
 ```bash
 npm install content-guard
 ```
 
-**Note**: This is version 0.1.0 - a development release. For production use, please wait for v1.0.0 stable.
+**Note**: This is version 0.1.1 - a development release. For production use, please wait for v1.0.0 stable.
 
 ### Basic Usage
 
@@ -157,7 +157,7 @@ const guard = new ContentGuard('moderate', {
   confidence: 0.85,
   flags: ['Detection reason'],
   preset: 'moderate',
-  version: '0.1.0',
+  version: '0.1.1',
   metadata: {
     processingTime: 12,
     context: { /* context analysis */ },
@@ -187,13 +187,13 @@ npm run benchmark
 
 ```bash
 # Analyze text
-npx contentguard "Hello world"
+npx content-guard "Hello world"
 
 # With options
-npx contentguard "Some text" --preset strict --explain
+npx content-guard "Some text" --preset strict --explain
 
 # See examples
-npx contentguard examples
+npx content-guard examples
 ```
 
 ## ⚠️ Beta Limitations & Known Issues
@@ -252,11 +252,12 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🏷️ Version History
 
-- **0.1.0** (Current): Initial beta release, basic functionality
+- **0.1.1** (Current): Critical bug fixes, CLI restoration, enhanced patterns
+- **0.1.0**: Initial beta release, basic functionality
 - **Previous versions (1.x-4.x)**: Legacy versions, not recommended
 
 > **Note**: Versions 1.0.0 through 4.7.1 were incorrectly published before the package was stable. Starting with 0.1.0, we're following proper semantic versioning. The legacy versions are deprecated.
 
 ---
 
-**ContentGuard v0.1.0** - Modern content analysis for the web (Beta) 
+**ContentGuard v0.1.1** - Modern content analysis for the web (Beta)

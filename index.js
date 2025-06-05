@@ -1,14 +1,16 @@
 /**
- * 🛡️ ContentGuard v0.1.0 - Advanced Content Analysis System (Beta)
+ * 🛡️ ContentGuard v0.1.1 - Advanced Content Analysis System (Beta)
  * 
- * Advanced content analysis with sophisticated harassment detection,
- * context awareness, and ML-powered toxicity analysis.
+ * Modern content moderation and spam detection with context-aware analysis,
+ * harassment detection, and ML-powered toxicity classification.
  * 
- * ⚠️ PRE-1.0 DEVELOPMENT VERSION - API may change
+ * Pre-1.0 development version - API may change between releases.
+ * Use in production at your own risk.
  * 
  * @author trevor050
+ * @version 0.1.1
  * @license MIT
- * @version 0.1.0
+ * @see https://github.com/trevor050/content-guard
  */
 
 const PluginManager = require('./lib/core/plugin-manager')
@@ -843,7 +845,7 @@ class ContentGuard {
       metadata: metadata || {},
       preprocessingApplied: metadata?.preprocessing?.applied,  // NEW: Show if preprocessing worked
       normalizedText: metadata?.processedText?.substring(0, 100),  // NEW: Show normalized text sample
-      version: '0.1.0',
+      version: '0.1.1',
       timestamp: new Date().toISOString(),
       performance: {
         averageAnalysisTime: this.stats.averageTime,
@@ -883,7 +885,7 @@ class ContentGuard {
   // Analytics and insights
   getAnalyticsReport() {
     return {
-      version: '0.1.0',
+      version: '0.1.1',
       totalAnalyses: this.stats.totalAnalyses,
       performance: {
         averageTime: `${this.stats.averageTime.toFixed(2)}ms`,
