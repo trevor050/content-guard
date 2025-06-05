@@ -1,5 +1,5 @@
 /**
- * 🛡️ ContentGuard v0.1.2 - Advanced Content Analysis System (Beta)
+ * 🛡️ ContentGuard v0.3.1 - Advanced Content Analysis System (Beta)
  * 
  * Modern content moderation and spam detection with context-aware analysis,
  * harassment detection, and ML-powered toxicity classification.
@@ -8,7 +8,7 @@
  * Use in production at your own risk.
  * 
  * @author trevor050
- * @version 0.1.2
+ * @version 0.3.1
  * @license MIT
  * @see https://github.com/trevor050/content-guard
  */
@@ -905,7 +905,7 @@ class ContentGuard {
   // Analytics and insights
   getAnalyticsReport() {
     return {
-      version: '0.1.2',
+      version: '0.3.1',
       totalAnalyses: this.stats.totalAnalyses,
       performance: {
         averageTime: `${this.stats.averageTime.toFixed(2)}ms`,

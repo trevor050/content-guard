@@ -5,7 +5,14 @@ All notable changes to ContentGuard will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.2] - 2025-01-05
+## [0.3.1] - 2025-01-05
+
+### 🔧 Maintenance
+- Cleaned up and localized the readme's
+- Tried to slim the NPM package
+- Got rid of unneeded files
+
+## [0.3.0] - 2025-01-05
 
 ### ✨ Added
 - 🎹 **Modular Keyboard Spam Detection Plugin** - Sophisticated, configurable spam detection system
@@ -80,7 +87,7 @@ const config = {
 - 🔧 Troubleshooting guide for common issues
 - 📊 Performance metrics and recommendations
 
-## [0.1.1] - 2024-12-28
+## [0.2.0] - 2024-12-28
 
 ### 🚨 IMPORTANT: Version Reset
 
@@ -106,7 +113,7 @@ This release marks a **version reset** to follow proper semantic versioning. Pre
 - 🧪 **Comprehensive test suite**
 
 ### Changed
-- 🔄 **Version reset from 4.7.1 → 0.1.1** (proper pre-1.0 versioning)
+- 🔄 **Version reset from 4.7.1 → 0.2.0** (proper pre-1.0 versioning)
 - 📚 **Complete documentation rewrite** for beta status
 - 🏗️ **API standardization** (may still change before v1.0)
 - ⚡ **Performance optimizations** across all variants
@@ -131,7 +138,7 @@ If upgrading from versions 1.x-4.x:
 const { createGuard } = require('content-guard');
 const guard = createGuard('balanced');
 
-// NEW (v0.1.1+)
+// NEW (v0.2.0+)
 const { ContentGuard } = require('content-guard');
 const guard = new ContentGuard('moderate');
 ```
@@ -161,7 +168,7 @@ const guard = new ContentGuard('moderate');
 
 ---
 
-**Note**: Starting with v0.1.0, we follow [Semantic Versioning](https://semver.org/). The API is considered unstable until v1.0.0.
+**Note**: Starting with v0.2.0, we follow [Semantic Versioning](https://semver.org/). The API is considered unstable until v1.0.0.
 
 ## [4.5.0] - 2024-02-XX
 
@@ -218,7 +225,7 @@ const guard = new ContentGuard({ variant: 'balanced' })
 
 ### 🎯 Performance Achievements
 
-#### Benchmark Results Summary
+#### Benchmark Results Summary (Mac M1)
 | Variant | Accuracy | Avg Time | Throughput | FP Rate | Use Case |
 |---------|----------|----------|------------|---------|----------|
 | **v4.5-large** | 94.0% | 1.32ms | 756/sec | 1.9% | Enterprise/Critical |

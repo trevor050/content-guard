@@ -1,4 +1,4 @@
-# ContentGuard v0.1.2
+# ContentGuard v0.3.1
 
 **Moderación profesional de contenido y detección de spam para aplicaciones modernas.**
 
@@ -37,7 +37,7 @@ ContentGuard v4.5 ofrece cuatro variantes para equilibrar velocidad y precisión
 | Variante        | Precisión | Tiempo medio | Caso de uso                                   |
 |-----------------|----------:|-------------:|-----------------------------------------------|
 | **v4.5-turbo**    | ~91%      | 0.02ms       | Chats en tiempo real y flujos de alto volumen |
-| **v4.5-fast**     | ~90%      | 0.06ms       | Pasarelas API y microservicios                |
+| **v4.5-fast**     | ~91.5%      | 0.06ms       | Pasarelas API y microservicios                |
 | **v4.5-balanced** | ~93%      | 0.25ms       | Despliegues en producción (por defecto)       |
 | **v4.5-large**    | ~94%      | 1.32ms       | Moderación crítica y empresarial              |
 
