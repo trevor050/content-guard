@@ -5,6 +5,89 @@ All notable changes to ContentGuard will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0] - 2024-12-26
+
+### 🚨 IMPORTANT: Version Reset
+
+This release marks a **version reset** to follow proper semantic versioning. Previous versions (1.0.0 through 4.7.1) were incorrectly published before the software was stable.
+
+**Previous versions are now deprecated** and should not be used in new projects.
+
+### Added
+- ✅ **Initial beta release** with proper semantic versioning
+- 🛡️ **Core ContentGuard class** with context-aware content analysis
+- 🧠 **Multi-preset system**: strict, moderate, lenient, gaming, professional
+- 🚀 **High-performance variants** (beta): fast, balanced, large, turbo
+- 🔍 **Advanced detection capabilities**:
+  - Harassment and toxicity detection
+  - Context-aware analysis (technical, business, gaming contexts)
+  - ML-powered sentiment analysis (experimental)
+  - Emoji sentiment analysis (experimental)
+  - Cross-cultural text analysis (experimental)
+- 🛠️ **Plugin system** with modular architecture
+- 📊 **Performance metrics** and analytics
+- 🎯 **CLI interface** for testing and development
+- 📝 **TypeScript definitions** included
+- 🧪 **Comprehensive test suite**
+
+### Changed
+- 🔄 **Version reset from 4.7.1 → 0.1.0** (proper pre-1.0 versioning)
+- 📚 **Complete documentation rewrite** for beta status
+- 🏗️ **API standardization** (may still change before v1.0)
+- ⚡ **Performance optimizations** across all variants
+- 🛡️ **Enhanced error handling** with fail-open design
+
+### Deprecated
+- ❌ **All previous versions (1.0.0 - 4.7.1)** are deprecated
+- ⚠️ **Legacy API methods** will be removed in v1.0.0
+
+### Beta Limitations
+- 🚧 **API may change** between 0.x releases
+- ⚠️ **Not production-ready** - use at your own risk
+- 🧪 **ML features are experimental** and may have accuracy issues
+- 📖 **Documentation may be incomplete** for some features
+
+### Migration from Legacy Versions
+
+If upgrading from versions 1.x-4.x:
+
+```javascript
+// OLD (deprecated)
+const { createGuard } = require('content-guard');
+const guard = createGuard('balanced');
+
+// NEW (v0.1.0+)
+const { ContentGuard } = require('content-guard');
+const guard = new ContentGuard('moderate');
+```
+
+## [Previous Versions - DEPRECATED]
+
+### [4.7.1] - [DEPRECATED]
+### [4.7.0] - [DEPRECATED]
+### [4.5.0] - [DEPRECATED]
+### [4.0.0] - [DEPRECATED]
+### [3.0.0] - [DEPRECATED]
+### [1.0.2] - [DEPRECATED]
+### [1.0.1] - [DEPRECATED]
+### [1.0.0] - [DEPRECATED]
+
+> **Note**: These versions were published before the software reached stability and do not follow proper semantic versioning. They are deprecated and should not be used.
+
+---
+
+## Roadmap to v1.0.0
+
+- **v0.2.0**: API stabilization, performance improvements
+- **v0.3.0**: Enhanced ML features, better accuracy  
+- **v0.4.0**: Production optimizations, memory improvements
+- **v0.5.0**: Complete documentation, comprehensive tests
+- **v1.0.0**: Stable API, production-ready, breaking change freeze
+
+---
+
+**Note**: Starting with v0.1.0, we follow [Semantic Versioning](https://semver.org/). The API is considered unstable until v1.0.0.
+
 ## [4.5.0] - 2024-02-XX
 
 ### 🚀 Major Release - ContentGuard v4.5 Multi-Variant Optimization System

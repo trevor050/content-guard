@@ -1,8 +1,12 @@
-# ContentGuard v4.5 - Ultimate Anti-Troll System
+# ContentGuard v0.1.0 (Beta)
 
-Revolutionary content analysis system with 4 optimized variants for maximum performance flexibility.
+🛡️ **Advanced Content Analysis System - Pre-1.0 Development Version**
 
-## 🚀 Quick Start as NPM Package
+> ⚠️ **BETA SOFTWARE**: This is a pre-1.0 development version. The API may change between releases. Use in production at your own risk.
+
+Modern content moderation and spam detection with context-aware analysis, harassment detection, and ML-powered toxicity classification.
+
+## 🚀 Quick Start
 
 ### Installation
 
@@ -10,62 +14,57 @@ Revolutionary content analysis system with 4 optimized variants for maximum perf
 npm install content-guard
 ```
 
+**Note**: This is version 0.1.0 - a development release. For production use, please wait for v1.0.0 stable.
+
 ### Basic Usage
 
 ```javascript
-const { createGuard } = require('content-guard');
+const { ContentGuard } = require('content-guard');
 
-// Create a guard with your preferred variant
-const guard = createGuard('balanced'); // fast, balanced, large, turbo
+// Create an instance
+const guard = new ContentGuard('moderate');
 
 // Analyze content
 const result = await guard.analyze('Hello world!');
 console.log(result.isSpam); // false
 console.log(result.score);  // 0
 
-// Check spam content
-const spamResult = await guard.analyze('you should kill yourself');
+// Check problematic content
+const spamResult = await guard.analyze('toxic message here');
 console.log(spamResult.isSpam); // true
 console.log(spamResult.score);  // 7+
 ```
 
-## 🎯 v4.5 Variants
+## 🎯 Available Variants (Beta)
 
-| Variant | Speed | Accuracy | Use Case |
-|---------|-------|----------|----------|
-| **turbo** | ~0.02ms | 91%+ | Ultra high-throughput systems |
-| **fast** | ~0.05ms | 90%+ | Real-time applications |
-| **balanced** | ~0.3ms | 93%+ | General production use |
-| **large** | ~1.5ms | 94%+ | Critical content moderation |
+| Variant | Speed | Accuracy | Status | Use Case |
+|---------|-------|----------|--------|----------|
+| **ContentGuard** | ~0.3ms | 92%+ | ✅ Stable | General use (recommended) |
+| **V4Fast** | ~0.05ms | 90%+ | 🧪 Beta | High-throughput systems |
+| **V4Balanced** | ~0.3ms | 93%+ | 🧪 Beta | Production applications |
+| **V4Large** | ~1.5ms | 94%+ | 🧪 Beta | Maximum accuracy |
+| **V4Turbo** | ~0.02ms | 91%+ | 🧪 Beta | Ultra-fast processing |
 
-### Variant Selection
+### Using Variants
 
 ```javascript
-const { createGuard } = require('content-guard');
+const { ContentGuard, createGuard } = require('content-guard');
 
-// Ultra-fast for chat systems
-const chatGuard = createGuard('turbo', {
-  spamThreshold: 4 // More sensitive for chat
-});
+// Recommended: Use main ContentGuard class
+const guard = new ContentGuard('moderate');
 
-// Balanced for web forms  
-const formGuard = createGuard('balanced', {
-  spamThreshold: 6 // More lenient for forms
-});
-
-// Maximum accuracy for critical moderation
-const moderationGuard = createGuard('large', {
-  spamThreshold: 5 // Standard threshold
-});
+// Beta: Use variants (API may change)
+const fastGuard = createGuard('fast');
+const balancedGuard = createGuard('balanced');
 ```
 
-## 📋 Real-World Integration Examples
+## 📋 Integration Examples
 
 ### Express.js Middleware
 
 ```javascript
-const { createGuard } = require('content-guard');
-const guard = createGuard('fast'); // High-throughput variant
+const { ContentGuard } = require('content-guard');
+const guard = new ContentGuard('moderate');
 
 const contentModeration = async (req, res, next) => {
   try {
@@ -81,9 +80,9 @@ const contentModeration = async (req, res, next) => {
       });
     }
     
-    req.moderationResult = result;
     next();
   } catch (error) {
+    console.error('Moderation error:', error);
     next(); // Fail open on errors
   }
 };
@@ -91,221 +90,173 @@ const contentModeration = async (req, res, next) => {
 app.use('/api/comments', contentModeration);
 ```
 
-### Real-time Chat Moderation
-
-```javascript
-const { createGuard } = require('content-guard');
-const chatGuard = createGuard('turbo'); // Ultra-fast for real-time
-
-class ChatModerator {
-  async processMessage(username, message) {
-    const result = await chatGuard.analyze({ name: username, message });
-    
-    if (result.isSpam) {
-      return {
-        blocked: true,
-        reason: 'Message violates community guidelines'
-      };
-    }
-    
-    return { blocked: false };
-  }
-}
-```
-
-### Batch Content Processing
-
-```javascript
-const { createGuard } = require('content-guard');
-const batchGuard = createGuard('large'); // Maximum accuracy
-
-async function processBatch(contents) {
-  const results = [];
-  
-  for (const content of contents) {
-    const result = await batchGuard.analyze(content);
-    results.push({
-      content: content.substring(0, 50) + '...',
-      isSpam: result.isSpam,
-      score: result.score,
-      confidence: result.confidence
-    });
-  }
-  
-  return results;
-}
-```
-
 ### Contact Form Processing
 
 ```javascript
-const { createGuard } = require('content-guard');
-const formGuard = createGuard('balanced', {
-  spamThreshold: 6 // More lenient for contact forms
-});
+const { ContentGuard } = require('content-guard');
+const guard = new ContentGuard('lenient'); // More permissive for forms
 
 async function processContactForm(formData) {
-  const result = await formGuard.analyze({
-    name: formData.name,
-    email: formData.email,
-    subject: formData.subject,
-    message: formData.message
-  });
-  
-  if (result.isSpam) {
-    return {
-      success: false,
-      error: 'Submission blocked due to policy violation'
-    };
+  try {
+    const result = await guard.analyze({
+      name: formData.name,
+      email: formData.email,
+      subject: formData.subject,
+      message: formData.message
+    });
+    
+    if (result.isSpam) {
+      return {
+        success: false,
+        error: 'Submission blocked due to policy violation'
+      };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Form processing error:', error);
+    // Fail open in beta - allow submission
+    return { success: true };
   }
-  
-  return {
-    success: true,
-    ticketId: `TICKET-${Date.now()}`
-  };
 }
 ```
 
-## 🛠️ Advanced Configuration
+## 🛠️ Configuration
 
-### Custom Thresholds by Use Case
-
-```javascript
-const configs = {
-  // Very strict for public forums
-  strictForum: createGuard('large', {
-    spamThreshold: 3
-  }),
-  
-  // Lenient for gaming communities
-  gamingChat: createGuard('fast', {
-    spamThreshold: 7
-  }),
-  
-  // Very lenient for professional feedback
-  professionalFeedback: createGuard('balanced', {
-    spamThreshold: 8
-  })
-};
-```
-
-### Convenience Methods
+### Preset Configurations
 
 ```javascript
-const guard = createGuard('fast');
+const { ContentGuard } = require('content-guard');
 
-// Quick spam check
-const isSpam = await guard.isSpam('some text');
-
-// Get score only
-const score = await guard.getScore('some text');
-
-// Full analysis
-const result = await guard.analyze('some text');
+// Available presets
+const strictGuard = new ContentGuard('strict');     // Low tolerance
+const moderateGuard = new ContentGuard('moderate'); // Balanced (default)
+const lenientGuard = new ContentGuard('lenient');   // High tolerance
+const gamingGuard = new ContentGuard('gaming');     // Gaming-aware
+const professionalGuard = new ContentGuard('professional'); // Business context
 ```
 
-## 📊 Performance Benchmarks
-
-Run your own benchmarks:
-
-```bash
-# Test all variants
-node cli/analyze.js benchmark --variant all
-
-# Test specific variant
-node cli/analyze.js benchmark --variant fast --iterations 100
-```
-
-Example results:
-- **Turbo**: 33,333 analyses/sec (0.03ms avg)
-- **Fast**: 7,143 analyses/sec (0.14ms avg)  
-- **Balanced**: 1,408 analyses/sec (0.71ms avg)
-- **Large**: 690 analyses/sec (1.45ms avg)
-
-## 🧪 Testing
-
-Run comprehensive NPM package tests:
-
-```bash
-node tests/npm-package-usage-tests.js
-```
-
-Run integration examples:
-
-```bash
-node examples/npm-package-examples.js
-```
-
-## 📖 CLI Usage
-
-ContentGuard also includes a powerful CLI:
-
-```bash
-# Analyze with fast variant
-npx contentguard "Hello world" --variant fast
-
-# Detailed analysis with large variant
-npx contentguard "Some text" --variant large --explain --performance
-
-# Custom threshold
-npx contentguard "Some text" --variant balanced --threshold 3
-
-# See all examples
-npx contentguard examples
-```
-
-## 🎯 Choosing the Right Variant
-
-- **Use `turbo`** for: Real-time chat, live comments, ultra high-volume APIs
-- **Use `fast`** for: API endpoints, form validation, moderate-volume processing  
-- **Use `balanced`** for: General web applications, contact forms, user content
-- **Use `large`** for: Critical moderation, batch processing, maximum accuracy needs
-
-## 🔧 Error Handling
-
-Always implement graceful error handling:
+### Custom Configuration
 
 ```javascript
-const guard = createGuard('balanced');
-
-try {
-  const result = await guard.analyze(content);
-  // Process result
-} catch (error) {
-  console.error('Analysis failed:', error.message);
-  // Fail open - allow content when in doubt
-  // Or implement your fallback logic
-}
+const guard = new ContentGuard('moderate', {
+  spamThreshold: 6,           // Custom threshold
+  enableMLFeatures: true,     // Enable ML analysis (beta)
+  enableEmojiAnalysis: true,  // Emoji sentiment (beta)
+  enableCrossCultural: true,  // Cross-cultural analysis (beta)
+  debug: false
+});
 ```
 
-## 📄 Response Format
+## 📊 Response Format
 
 ```javascript
 {
   isSpam: false,
   score: 2.3,
   confidence: 0.85,
-  variant: 'v4.5-balanced',
-  flags: ['Some detection flag'],
-  riskLevel: 'LOW',
-  recommendation: 'Allow - Clean content detected',
+  flags: ['Detection reason'],
+  preset: 'moderate',
+  version: '0.1.0',
   metadata: {
     processingTime: 12,
-    // ... additional metadata
+    context: { /* context analysis */ },
+    mlAnalysis: { /* ML results (beta) */ },
+    performance: { /* performance metrics */ }
   },
   timestamp: '2024-01-01T12:00:00.000Z'
 }
 ```
 
-## 🌟 Why ContentGuard v4.5?
+## 🧪 Testing & Development
 
-- **4 Performance Variants**: Choose speed vs accuracy based on your needs
-- **93-94% Accuracy**: State-of-the-art detection across all variants
-- **Context-Aware**: Understands technical, business, and cultural contexts
-- **Production Ready**: Handles errors gracefully, fail-open design
-- **TypeScript Support**: Full type definitions included
-- **Zero Config**: Works out of the box, customize as needed
+### Run Tests
+
+```bash
+# Run basic tests
+npm test
+
+# Run simple demo
+npm run demo:simple
+
+# Run benchmark
+npm run benchmark
+```
+
+### CLI Usage (Beta)
+
+```bash
+# Analyze text
+npx contentguard "Hello world"
+
+# With options
+npx contentguard "Some text" --preset strict --explain
+
+# See examples
+npx contentguard examples
+```
+
+## ⚠️ Beta Limitations & Known Issues
+
+- **API Stability**: Method signatures may change before v1.0
+- **Performance**: Not yet optimized for high-volume production
+- **ML Features**: Experimental, may have accuracy issues
+- **Documentation**: Some features may be underdocumented
+- **Breaking Changes**: Expected between 0.x versions
+
+## 🔧 Error Handling
+
+Always implement robust error handling in this beta version:
+
+```javascript
+const { ContentGuard } = require('content-guard');
+const guard = new ContentGuard('moderate');
+
+async function analyzeWithFallback(content) {
+  try {
+    return await guard.analyze(content);
+  } catch (error) {
+    console.error('ContentGuard error:', error.message);
+    
+    // Beta fallback - return safe default
+    return {
+      isSpam: false,
+      score: 0,
+      confidence: 0,
+      flags: ['Analysis failed - using fallback'],
+      error: true
+    };
+  }
+}
+```
+
+## 🗺️ Roadmap to v1.0
+
+- [ ] **v0.2.0**: API stabilization, performance improvements
+- [ ] **v0.3.0**: Enhanced ML features, better accuracy
+- [ ] **v0.4.0**: Production optimizations, memory improvements
+- [ ] **v0.5.0**: Complete documentation, comprehensive tests
+- [ ] **v1.0.0**: Stable API, production-ready, breaking change freeze
+
+## 🤝 Contributing & Feedback
+
+This is a beta package. Issues and feedback are welcome:
+
+- **Issues**: [GitHub Issues](https://github.com/trevor050/content-guard/issues)
+- **Feature Requests**: Tag as `enhancement`
+- **Bug Reports**: Tag as `bug`
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## 🏷️ Version History
+
+- **0.1.0** (Current): Initial beta release, basic functionality
+- **Previous versions (1.x-4.x)**: Legacy versions, not recommended
+
+> **Note**: Versions 1.0.0 through 4.7.1 were incorrectly published before the package was stable. Starting with 0.1.0, we're following proper semantic versioning. The legacy versions are deprecated.
 
 ---
 
-*ContentGuard v4.5 - The most advanced content analysis system for modern applications.* 
+**ContentGuard v0.1.0** - Modern content analysis for the web (Beta) 

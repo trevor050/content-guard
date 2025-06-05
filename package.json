@@ -1,44 +1,42 @@
 {
   "name": "content-guard",
-  "version": "4.5.0",
-  "description": "Revolutionary v4.5 content analysis system with 4 optimized variants: ultra-fast turbo (0.02ms), balanced (0.3ms, 93%+ accuracy), fast (0.05ms, 90%+ accuracy), and large (1.5ms, 94%+ accuracy) for maximum performance flexibility",
+  "version": "0.1.0",
+  "description": "🛡️ Advanced content analysis and moderation system with multi-variant optimization. Features context-aware detection, harassment prevention, and ML-powered toxicity analysis. Pre-1.0 development version.",
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
     "test": "node tests/massive-benchmark-v3.js",
-    "test:tiered": "node production-tiered-system.js",
+    "test:simple": "node test-simple.js",
     "benchmark": "node benchmark.js",
-    "test:context": "node tests/massive-benchmark-v3.js",
-    "performance": "node production-tiered-system.js",
+    "demo": "node quick-demo.js",
+    "demo:simple": "node demo-simple.js",
     "start": "node index.js"
   },
   "keywords": [
     "content-moderation",
     "spam-detection",
     "harassment-detection",
-    "tiered-analysis",
-    "ultra-fast",
     "content-analysis",
     "text-classification",
-    "machine-learning",
-    "context-aware",
-    "adversarial-resistant",
-    "enterprise-ready",
-    "progressive-escalation",
-    "computational-efficiency",
-    "workplace-safety",
-    "social-engineering",
     "toxicity-detection",
-    "cross-cultural",
-    "professional-communication",
-    "unicode-normalization",
-    "real-time"
+    "context-aware",
+    "machine-learning",
+    "beta",
+    "development",
+    "pre-release",
+    "npm-package",
+    "security",
+    "safety",
+    "workplace-communication"
   ],
-  "author": "ContentGuard Team",
+  "author": {
+    "name": "trevor050",
+    "url": "https://github.com/trevor050"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/trevor050/content-guard.git"
+    "url": "git+https://github.com/trevor050/content-guard.git"
   },
   "bugs": {
     "url": "https://github.com/trevor050/content-guard/issues"
@@ -61,7 +59,8 @@
     "@types/node": "^20.0.0"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
   },
   "files": [
     "index.js",
@@ -69,15 +68,19 @@
     "lib/",
     "cli/",
     "examples/",
-    "production-tiered-system.js",
-    "optimized-config.json",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
   ],
   "exports": {
-    ".": "./index.js",
-    "./production": "./production-tiered-system.js",
+    ".": {
+      "types": "./index.d.ts",
+      "require": "./index.js",
+      "import": "./index.js"
+    },
     "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -1,12 +1,14 @@
 /**
- * 🛡️ ContentGuard v3.0 - Next-Generation Content Analysis System
+ * 🛡️ ContentGuard v0.1.0 - Advanced Content Analysis System (Beta)
  * 
- * Revolutionary content analysis with sophisticated harassment detection,
- * advanced context awareness, and adversarial attack resistance.
+ * Advanced content analysis with sophisticated harassment detection,
+ * context awareness, and ML-powered toxicity analysis.
+ * 
+ * ⚠️ PRE-1.0 DEVELOPMENT VERSION - API may change
  * 
  * @author trevor050
  * @license MIT
- * @version 3.0.0
+ * @version 0.1.0
  */
 
 const PluginManager = require('./lib/core/plugin-manager')
@@ -826,7 +828,7 @@ class ContentGuard {
       metadata: metadata || {},
       preprocessingApplied: metadata?.preprocessing?.applied,  // NEW: Show if preprocessing worked
       normalizedText: metadata?.processedText?.substring(0, 100),  // NEW: Show normalized text sample
-      version: '4.5.0',
+      version: '0.1.0',
       timestamp: new Date().toISOString(),
       performance: {
         averageAnalysisTime: this.stats.averageTime,
@@ -863,10 +865,10 @@ class ContentGuard {
     return Math.round(confidence * 100) / 100
   }
 
-  // v4.0 Analytics and insights
+  // Analytics and insights
   getAnalyticsReport() {
     return {
-      version: '4.5.0',
+      version: '0.1.0',
       totalAnalyses: this.stats.totalAnalyses,
       performance: {
         averageTime: `${this.stats.averageTime.toFixed(2)}ms`,
