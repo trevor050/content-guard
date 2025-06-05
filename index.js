@@ -947,8 +947,77 @@ class ContentGuard {
     if (this.mlPlugins.confusablesAdvanced) {
       results.unicode = this.mlPlugins.confusablesAdvanced.getUnicodeAnalysis(text)
     }
-    
+
     return results
+  }
+
+  // ===== Result helper methods =====
+  getRiskLevel(score) {
+    if (score >= 15) return 'CRITICAL'
+    if (score >= 10) return 'HIGH'
+    if (score >= 5) return 'MEDIUM'
+    if (score >= 2) return 'LOW'
+    return 'CLEAN'
+  }
+
+  getRecommendation(score, riskLevel) {
+    switch (riskLevel) {
+      case 'CRITICAL':
+        return 'Block immediately - High confidence spam/harassment detected'
+      case 'HIGH':
+        return 'Block - Likely spam or inappropriate content'
+      case 'MEDIUM':
+        return 'Review - Potentially problematic content detected'
+      case 'LOW':
+        return 'Monitor - Slightly concerning patterns detected'
+      default:
+        return 'Allow - Clean content detected'
+    }
+  }
+
+  calculateConfidence(score, threshold, metadata = {}) {
+    let confidence = 0.5
+
+    if (score >= threshold) {
+      const overage = score - threshold
+      confidence = Math.min(0.95, 0.6 + overage * 0.1)
+    } else {
+      const underage = threshold - score
+      confidence = Math.min(0.95, 0.6 + underage * 0.05)
+    }
+
+    if (metadata.mlAnalysis && metadata.mlAnalysis.confidence) {
+      confidence = Math.min(0.98, confidence + metadata.mlAnalysis.confidence * 0.1)
+    }
+
+    if (metadata.performance && metadata.performance.pluginsUsed?.length > 4) {
+      confidence = Math.min(0.99, confidence + 0.05)
+    }
+
+    return Math.round(confidence * 100) / 100
+  }
+
+  createResult(score, riskLevel, processingTime, additionalData = {}, metadata = {}) {
+    const isSpam = Object.prototype.hasOwnProperty.call(additionalData, 'isSpam')
+      ? additionalData.isSpam
+      : score >= this.options.spamThreshold
+
+    return {
+      score,
+      isSpam,
+      riskLevel,
+      processingTime: Math.round(processingTime * 1000) / 1000,
+      recommendation: additionalData.recommendation || this.getRecommendation(score, riskLevel),
+      confidence: additionalData.confidence || this.calculateConfidence(score, this.options.spamThreshold, metadata),
+      flags: additionalData.flags || [],
+      variant: 'core',
+      details: additionalData.details || {},
+      metadata: {
+        ...metadata,
+        ...(additionalData.metadata || {}),
+        timestamp: new Date().toISOString(),
+      },
+    }
   }
 
   // === Convenience Methods (Backwards Compatibility) ===

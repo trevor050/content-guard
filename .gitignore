@@ -122,3 +122,11 @@ test-results/
 # Custom
 configs/saved-configs.json 
 node_modules
+# Development artifacts
+benchmarks/
+legacy-versions/
+combined-benchmark-report*.json
+combined-benchmark-summary*.csv
+production-tiered-system-v2.js
+quick-demo.js
+test-variants.js
