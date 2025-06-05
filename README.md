@@ -8,7 +8,7 @@ Modern content moderation and spam detection with context-aware analysis, harass
 
 ## 🚀 Quick Start
 
-### Installation
+### InstallationOk
 
 ```bash
 npm install content-guard

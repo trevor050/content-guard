@@ -1,9 +1,13 @@
 {
   "name": "content-guard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "🛡️ Advanced content analysis and moderation system with multi-variant optimization. Features context-aware detection, harassment prevention, and ML-powered toxicity analysis. Pre-1.0 development version.",
   "main": "index.js",
   "types": "index.d.ts",
+  "bin": {
+    "content-guard": "./cli/analyze.js",
+    "contentguard": "./cli/analyze.js"
+  },
   "scripts": {
     "test": "node tests/massive-benchmark-v3.js",
     "test:simple": "node test-simple.js",

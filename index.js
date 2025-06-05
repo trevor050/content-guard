@@ -78,36 +78,30 @@ class ContentGuard {
 
   async initializeMLPlugins() {
     try {
-      // v4.0 ML Plugins
+      // v4.0 ML Plugins - Silent by default
       if (this.options.enableMLFeatures) {
-        console.log('🤖 Initializing v4.0 ML plugins...')
-        
         // Emoji sentiment analysis
         if (this.options.enableEmojiAnalysis) {
           this.mlPlugins.emojiSentiment = new EmojiSentimentPlugin()
-          console.log('✅ Emoji sentiment plugin ready')
         }
         
         // Advanced confusables (always enabled for preprocessing)
         this.mlPlugins.confusablesAdvanced = new ConfusablesAdvancedPlugin()
-        console.log('✅ Advanced confusables plugin ready')
         
         // Cross-cultural analysis
         if (this.options.enableCrossCultural) {
           this.mlPlugins.crossCultural = new CrossCulturalPlugin()
-          console.log('✅ Cross-cultural analysis plugin ready')
         }
         
-        // ML toxicity detection (async initialization)
+        // ML toxicity detection (async initialization) - silent unless debug enabled
         this.mlPlugins.mlToxicity = new MLToxicityPlugin()
-        await this.mlPlugins.mlToxicity.initialize()
-        console.log('✅ ML toxicity plugin ready')
-        
-        console.log('🚀 All v4.0 ML plugins initialized successfully')
+        await this.mlPlugins.mlToxicity.initialize(this.options.debug)
       }
     } catch (error) {
-      console.warn('⚠️ Some ML plugins failed to initialize:', error.message)
-      console.log('📝 Falling back to rule-based analysis only')
+      if (this.options.debug) {
+        console.warn('⚠️ Some ML plugins failed to initialize:', error.message)
+        console.log('📝 Falling back to rule-based analysis only')
+      }
     }
   }
 
@@ -629,6 +623,13 @@ class ContentGuard {
     const startTime = Date.now()
     
     try {
+      // Add input validation to prevent null/undefined errors
+      if (text === null || text === undefined) {
+        return this.createResult(0, ['[ERROR] Input cannot be null or undefined'], {
+          error: 'Invalid input: null or undefined'
+        })
+      }
+
       // Handle both string input and object input
       let input
       if (typeof text === 'string') {
@@ -638,8 +639,22 @@ class ContentGuard {
           subject: '',
           message: text
         }
+      } else if (typeof text === 'object' && text !== null) {
+        // Ensure object input has required structure
+        input = {
+          name: text.name || '',
+          email: text.email || '',
+          subject: text.subject || '',
+          message: text.message || ''
+        }
       } else {
-        input = text
+        // Convert other types to string for analysis
+        input = {
+          name: '',
+          email: '',
+          subject: '',
+          message: String(text)
+        }
       }
 
       // Create combined text for analysis
