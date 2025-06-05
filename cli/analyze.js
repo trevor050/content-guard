@@ -13,7 +13,7 @@ const chalk = require('chalk')
 program
   .name('contentguard')
   .description('Analyze content for spam, toxicity, and harassment')
-  .version('0.1.1')
+  .version('0.1.2')
 
 program
   .argument('<text>', 'Text to analyze')
@@ -59,7 +59,7 @@ program
       }
       
       // Display results
-      console.log(chalk.bold('\n🛡️  ContentGuard v0.1.1 Analysis Results (Beta)'))
+      console.log(chalk.bold('\n🛡️  ContentGuard v0.1.2 Analysis Results (Beta)'))
       console.log('=' .repeat(60))
       console.log(`🚀 Variant: ${chalk.cyan(options.variant.toUpperCase())}`)
       console.log();
@@ -151,9 +151,9 @@ program
       
       // Standard info
       console.log(`\n📋 Analysis Info:`)
-      console.log(`   ContentGuard version: v${result.version || result.metadata?.version || '0.1.1'}`)
+      console.log(`   ContentGuard version: v${result.version || result.metadata?.version || '0.1.2'}`)
       console.log(`   Variant: ${result.variant || options.variant}`)
-      console.log(`   Plugins: ${result.metadata?.performance?.pluginsUsed?.join(', ') || 'N/A'}`)
+      console.log(`   Plugins: ${result.metadata?.pluginsUsed?.join(', ') || result.metadata?.performance?.pluginsUsed?.join(', ') || 'N/A'}`)
       console.log(`   Timestamp: ${result.timestamp ? new Date(result.timestamp).toLocaleString() : new Date().toLocaleString()}`)
       
       // Exit with appropriate code

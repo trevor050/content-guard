@@ -1,5 +1,5 @@
 /**
- * 🛡️ ContentGuard v0.1.1 - Advanced Content Analysis System (Beta)
+ * 🛡️ ContentGuard v0.1.2 - Advanced Content Analysis System (Beta)
  * 
  * Modern content moderation and spam detection with context-aware analysis,
  * harassment detection, and ML-powered toxicity classification.
@@ -8,7 +8,7 @@
  * Use in production at your own risk.
  * 
  * @author trevor050
- * @version 0.1.1
+ * @version 0.1.2
  * @license MIT
  * @see https://github.com/trevor050/content-guard
  */
@@ -85,19 +85,25 @@ class ContentGuard {
         // Emoji sentiment analysis
         if (this.options.enableEmojiAnalysis) {
           this.mlPlugins.emojiSentiment = new EmojiSentimentPlugin()
+          if (this.options.debug) console.log('✅ Emoji sentiment plugin ready')
         }
         
         // Advanced confusables (always enabled for preprocessing)
         this.mlPlugins.confusablesAdvanced = new ConfusablesAdvancedPlugin()
+        if (this.options.debug) console.log('✅ Advanced confusables plugin ready')
         
         // Cross-cultural analysis
         if (this.options.enableCrossCultural) {
           this.mlPlugins.crossCultural = new CrossCulturalPlugin()
+          if (this.options.debug) console.log('✅ Cross-cultural analysis plugin ready')
         }
         
         // ML toxicity detection (async initialization) - silent unless debug enabled
-        this.mlPlugins.mlToxicity = new MLToxicityPlugin()
+        this.mlPlugins.mlToxicity = new MLToxicityPlugin({ silent: !this.options.debug })
         await this.mlPlugins.mlToxicity.initialize(this.options.debug)
+        if (this.options.debug) console.log('✅ ML toxicity plugin ready')
+        
+        if (this.options.debug) console.log('🚀 All v4.0 ML plugins initialized successfully')
       }
     } catch (error) {
       if (this.options.debug) {
@@ -621,271 +627,285 @@ class ContentGuard {
   /**
    * v3.0 ENHANCED Main analysis function with preprocessing and context detection
    */
-  async analyze(text, context = {}) {
-    const startTime = Date.now()
+  async analyze(input) {
+    const startTime = performance.now()
     
     try {
       // Add input validation to prevent null/undefined errors
-      if (text === null || text === undefined) {
-        return this.createResult(0, ['[ERROR] Input cannot be null or undefined'], {
-          error: 'Invalid input: null or undefined'
-        })
+      if (input === null || input === undefined) {
+        return this.createResult(0, 'CLEAN', performance.now() - startTime, {
+          flags: ['[ERROR] Input cannot be null or undefined'],
+          recommendation: 'Invalid input provided'
+        }, { error: 'Invalid input: null or undefined' });
       }
 
       // Handle both string input and object input
-      let input
-      if (typeof text === 'string') {
-        input = {
+      let analysisInput
+      if (typeof input === 'string') {
+        analysisInput = {
           name: '',
           email: '',
           subject: '',
-          message: text
+          message: input
         }
-      } else if (typeof text === 'object' && text !== null) {
-        // Ensure object input has required structure
-        input = {
-          name: text.name || '',
-          email: text.email || '',
-          subject: text.subject || '',
-          message: text.message || ''
+      } else if (typeof input === 'object' && input !== null) {
+        analysisInput = {
+          name: input.name || '',
+          email: input.email || '',
+          subject: input.subject || '',
+          message: input.message || ''
         }
       } else {
-        // Convert other types to string for analysis
-        input = {
+        // Convert other types to string
+        analysisInput = {
           name: '',
           email: '',
           subject: '',
-          message: String(text)
+          message: String(input)
         }
       }
 
       // Create combined text for analysis
-      const allText = [input.name, input.email, input.subject, input.message]
+      const allText = [analysisInput.name, analysisInput.email, analysisInput.subject, analysisInput.message]
         .filter(Boolean)
         .join(' ')
 
       if (!allText || allText.trim().length === 0) {
-        return this.createResult(0, [], { error: 'Invalid input text' })
+        return this.createResult(0, 'CLEAN', performance.now() - startTime, {}, { error: 'Invalid input text' })
       }
 
-      // Enhanced preprocessing with v4.0 confusables
-      const preprocessingResult = this.preprocessor.preprocess(allText, {
-        ...this.options.preprocessing,  // Pass user's preprocessing options
-        useAdvancedConfusables: true
-      })
-      const processedText = preprocessingResult.processedText
+      // Enhanced preprocessing with l33tspeak detection
+      const preprocessingResult = this.preprocessor.preprocess(allText, this.options.preprocessing)
+      const processedText = preprocessingResult.text || allText
+      const preprocessingMetadata = preprocessingResult.metadata || {}
 
-      // Create content object for plugins with PREPROCESSED text
+      // Create enhanced content object
       const content = {
-        name: input.name || '',
-        email: input.email || '',
-        subject: input.subject || '',
-        message: input.message || '',
-        allText: processedText,  // FIXED: Use preprocessed text instead of original
-        allTextLower: processedText.toLowerCase(),  // FIXED: Use preprocessed text
-        originalText: allText  // Keep original for reference
+        allText: processedText,
+        allTextLower: processedText.toLowerCase(),
+        originalText: allText,
+        name: analysisInput.name || '',
+        email: analysisInput.email || '',
+        subject: analysisInput.subject || '',
+        message: analysisInput.message || '',
+        originalInput: analysisInput,
+        preprocessing: preprocessingMetadata
       }
 
-      // Initialize result structure
-      const result = {
-        score: 0,
-        flags: [],
-        preset: this.preset,
-        metadata: {
-          originalText: allText,
+      let totalScore = 0
+      let allFlags = []
+      let highestIndividualScore = 0
+
+      // NEW: Enhanced L33tspeak Analysis - Test all variations
+      if (preprocessingMetadata.hasLeetSpeak && preprocessingMetadata.leetSpeakVariations) {
+        const leetAnalysisResult = await this.analyzeAllLeetSpeakVariations(
+          preprocessingMetadata.leetSpeakVariations, 
+          content
+        )
+        
+        if (leetAnalysisResult.maxScore > highestIndividualScore) {
+          highestIndividualScore = leetAnalysisResult.maxScore
+        }
+        
+        totalScore += leetAnalysisResult.bonusScore
+        allFlags.push(...leetAnalysisResult.flags)
+      }
+
+      // Context detection
+      const context = { isProfessional: false, isPersonal: false, isNeutral: true }
+      if (this.options.enableContextDetection && this.contextDetector) {
+        try {
+          const contextResult = await this.contextDetector.analyzeContext(content)
+          Object.assign(context, contextResult)
+        } catch (error) {
+          console.error('Context detection error:', error)
+        }
+      }
+
+      // Run plugin analysis
+      const pluginResults = await this.pluginManager.analyze(content, context)
+      
+      Object.entries(pluginResults).forEach(([pluginName, pluginResult]) => {
+        if (pluginName.startsWith('_')) return
+        
+        const weight = this.options.plugins[pluginName]?.weight || 1
+        const pluginScore = (pluginResult.score || 0) * weight
+        totalScore += pluginScore
+        allFlags.push(...(pluginResult.flags || []))
+        
+        if (pluginScore > highestIndividualScore) {
+          highestIndividualScore = pluginScore
+        }
+      })
+
+      // Use the higher of total accumulated score or highest individual score
+      const finalScore = Math.max(totalScore, highestIndividualScore)
+
+      const processingTime = performance.now() - startTime
+      
+      return this.createResult(
+        finalScore,
+        this.getRiskLevel(finalScore),
+        processingTime,
+        { 
+          flags: allFlags,
+          recommendation: this.getRecommendation(finalScore, this.getRiskLevel(finalScore)),
+          confidence: this.calculateConfidence(finalScore, this.options.spamThreshold, { pluginResults })
+        },
+        {
+          version: this.version,
+          pluginsUsed: Object.keys(pluginResults).filter(name => !name.startsWith('_')),
           processedText: processedText,
-          preprocessing: preprocessingResult.metadata,
-          context: {},
-          harassment: {},
-          socialEngineering: {},
-          obscenity: {},
-          mlAnalysis: {}, // NEW: ML analysis results
-          emojiAnalysis: {}, // NEW: Emoji analysis
-          crossCultural: {}, // NEW: Cross-cultural analysis
-          performance: {
-            processingTime: 0,
-            mlProcessingTime: 0,
-            pluginsUsed: []
-          }
+          preprocessing: preprocessingMetadata,
+          leetSpeakAnalysis: preprocessingMetadata.hasLeetSpeak ? {
+            detected: true,
+            variationsCount: preprocessingMetadata.leetSpeakVariations?.length || 0,
+            highestVariationScore: highestIndividualScore
+          } : { detected: false }
         }
-      }
-
-      // Core analysis pipeline
-      await this.runCoreAnalysis(content, context, result)
-      
-      // v4.0 ML analysis pipeline
-      if (this.options.enableMLFeatures) {
-        await this.runMLAnalysis(processedText, context, result)
-      }
-
-      // Apply preset thresholds and final adjustments
-      this.applyPresetLogic(result)
-      
-      // Update performance metrics
-      const processingTime = Date.now() - startTime
-      this.updateStats(processingTime, result)
-      result.metadata.performance.processingTime = processingTime
-
-      return this.createResult(result.score, result.flags, result.metadata)
+      )
 
     } catch (error) {
-      console.error('ContentGuard analysis error:', error)
-      const processingTime = Date.now() - startTime
-      return this.createResult(0, [`[ERROR] Analysis failed: ${error.message}`], {
+      console.error('❌ Analysis error:', error)
+      const processingTime = performance.now() - startTime
+      return this.createResult(0, 'CLEAN', processingTime, {}, {
         error: true,
-        processingTime: processingTime
+        message: error.message
       })
     }
   }
 
-  async runCoreAnalysis(content, context, result) {
-    // Context detection FIRST
-    if (this.options.enableContextDetection) {
-      const contextResult = this.contextDetector.analyzeContext(content, context)
-      result.metadata.context = contextResult
-      result.metadata.performance.pluginsUsed.push('context')
-      
-      // ADD CONTEXT TO CONTENT OBJECT for plugins to use
-      content.context = contextResult
+  /**
+   * Analyze all l33tspeak variations to find the most toxic interpretation
+   */
+  async analyzeAllLeetSpeakVariations(variations, originalContent) {
+    let maxScore = 0
+    let totalBonus = 0
+    const flags = []
+    const variationResults = []
+
+    if (this.options.debug) {
+      console.log(`🔍 Analyzing ${variations.length} l33tspeak variations...`)
     }
 
-    // Core content analysis through plugin manager (now with context)
-    const pluginResults = await this.pluginManager.analyze(content, context)
+    for (let i = 0; i < variations.length; i++) {
+      const variation = variations[i]
+      if (variation === originalContent.originalText) continue // Skip original
 
-    // Process plugin results
-    Object.entries(pluginResults).forEach(([pluginName, pluginResult]) => {
-      if (pluginName.startsWith('_')) return // Skip metadata fields
-      
-      result.score += pluginResult.score || 0
-      result.flags.push(...(pluginResult.flags || []))
-      result.metadata[pluginName] = pluginResult
-      result.metadata.performance.pluginsUsed.push(pluginName)
-    })
-  }
-
-  async runMLAnalysis(text, context, result) {
-    const mlStartTime = Date.now()
-    
-    try {
-      // Emoji sentiment analysis
-      if (this.mlPlugins.emojiSentiment) {
-        const emojiResult = this.mlPlugins.emojiSentiment.analyze(text, context)
-        result.metadata.emojiAnalysis = emojiResult
-        result.score += emojiResult.score
-        result.flags.push(...emojiResult.flags)
-        result.metadata.performance.pluginsUsed.push('emojiSentiment')
+      // Create content object for this variation
+      const variationContent = {
+        ...originalContent,
+        allText: variation,
+        allTextLower: variation.toLowerCase(),
+        isLeetSpeakVariation: true,
+        variationIndex: i
       }
 
-      // Cross-cultural analysis (can reduce false positives)
-      if (this.mlPlugins.crossCultural) {
-        const culturalResult = this.mlPlugins.crossCultural.analyze(text, context)
-        result.metadata.crossCultural = culturalResult
-        result.score += culturalResult.score // Can be negative (reduces score)
-        result.flags.push(...culturalResult.flags)
-        result.metadata.performance.pluginsUsed.push('crossCultural')
-      }
+      try {
+        // Analyze this specific variation
+        const variationScore = await this.analyzeSingleLeetSpeakVariation(variationContent)
+        variationResults.push({
+          text: variation,
+          score: variationScore.score,
+          flags: variationScore.flags,
+          index: i
+        })
 
-      // ML toxicity detection (advanced semantic analysis)
-      if (this.mlPlugins.mlToxicity) {
-        const mlResult = await this.mlPlugins.mlToxicity.analyze(text, context)
-        result.metadata.mlAnalysis = mlResult
-        result.score += mlResult.score
-        result.flags.push(...mlResult.flags)
-        result.metadata.performance.pluginsUsed.push('mlToxicity')
-        this.stats.mlAnalyses++
-      }
-
-      result.metadata.performance.mlProcessingTime = Date.now() - mlStartTime
-      
-    } catch (error) {
-      console.warn('ML analysis error:', error.message)
-      result.flags.push('[ML] ML analysis failed, using fallback')
-      result.metadata.mlAnalysis.error = error.message
-    }
-  }
-
-  applyPresetLogic(result) {
-    const thresholds = presets[this.preset] || presets.moderate
-    
-    // Apply preset-specific score adjustments
-    if (thresholds.adjustments) {
-      Object.entries(thresholds.adjustments).forEach(([type, adjustment]) => {
-        if (result.metadata[type] && result.metadata[type].score > 0) {
-          const oldScore = result.score
-          result.score += adjustment
-          result.flags.push(`[PRESET] ${type} adjustment: ${adjustment} points`)
+        if (variationScore.score > maxScore) {
+          maxScore = variationScore.score
         }
-      })
-    }
-    
-    // Ensure score doesn't go below 0
-    result.score = Math.max(0, result.score)
-  }
 
-  updateStats(processingTime, result) {
-    this.stats.totalAnalyses++
-    this.stats.totalTime += processingTime
-    this.stats.averageTime = this.stats.totalTime / this.stats.totalAnalyses
-    
-    // Track ML success rate
-    if (result.metadata.mlAnalysis && !result.metadata.mlAnalysis.error) {
-      this.stats.mlSuccessRate = this.stats.mlAnalyses / this.stats.totalAnalyses
-    }
-  }
+        if (this.options.debug && variationScore.score > 0) {
+          console.log(`📝 Variation ${i}: "${variation}" -> Score: ${variationScore.score}`)
+        }
 
-  createResult(score, flags, metadata) {
-    const threshold = presets[this.preset]?.spamThreshold || 5
+      } catch (error) {
+        console.error(`Error analyzing l33tspeak variation ${i}:`, error)
+      }
+    }
+
+    // Calculate bonus based on l33tspeak detection
+    if (maxScore > 5) {
+      // Significant l33tspeak evasion detected
+      totalBonus = Math.min(maxScore * 0.3, 10) // Up to 10 bonus points
+      flags.push(`[LEETSPEAK-EVASION] Detected toxic content via l33tspeak decoding (+${totalBonus.toFixed(1)})`)
+      
+      if (this.options.debug) {
+        console.log(`🚨 L33tspeak evasion detected! Max variation score: ${maxScore}, Bonus: ${totalBonus}`)
+      }
+    } else if (maxScore > 0) {
+      // Minor l33tspeak usage
+      totalBonus = 1
+      flags.push(`[LEETSPEAK-MINOR] Minor l33tspeak usage detected (+1.0)`)
+    }
+
+    // Add the best matching variation to flags
+    const bestVariation = variationResults.reduce((best, current) => 
+      current.score > best.score ? current : best, 
+      { score: 0, text: '', flags: [] }
+    )
+
+    if (bestVariation.score > 0) {
+      flags.push(`[LEETSPEAK-DECODED] Best match: "${bestVariation.text}" (Score: ${bestVariation.score})`)
+    }
 
     return {
-      isSpam: score >= threshold,
-      score: score,
-      confidence: this.calculateConfidence(score, threshold, metadata),
-      flags: flags,
-      preset: this.preset,
-      metadata: metadata || {},
-      preprocessingApplied: metadata?.preprocessing?.applied,  // NEW: Show if preprocessing worked
-      normalizedText: metadata?.processedText?.substring(0, 100),  // NEW: Show normalized text sample
-      version: '0.1.1',
-      timestamp: new Date().toISOString(),
-      performance: {
-        averageAnalysisTime: this.stats.averageTime,
-        totalAnalyses: this.stats.totalAnalyses,
-        mlSuccessRate: this.stats.mlSuccessRate
-      }
+      maxScore,
+      bonusScore: totalBonus,
+      flags,
+      variationResults,
+      bestVariation
     }
   }
 
-  calculateConfidence(score, threshold, metadata) {
-    // Base confidence on how far from threshold we are
-    let confidence = 0.5
+  /**
+   * Analyze a single l33tspeak variation using core detection patterns
+   */
+  async analyzeSingleLeetSpeakVariation(variationContent) {
+    let score = 0
+    const flags = []
+
+    // Use the patterns from constants for direct harassment detection
+    const { HARASSMENT_KEYWORDS } = require('./lib/constants/context-data')
     
-    if (score >= threshold) {
-      // Spam detection confidence
-      const overage = score - threshold
-      confidence = Math.min(0.95, 0.6 + (overage * 0.1))
-    } else {
-      // Clean content confidence  
-      const underage = threshold - score
-      confidence = Math.min(0.95, 0.6 + (underage * 0.05))
-    }
-    
-    // Boost confidence with ML analysis
-    if (metadata.mlAnalysis && metadata.mlAnalysis.confidence) {
-      confidence = Math.min(0.98, confidence + (metadata.mlAnalysis.confidence * 0.1))
-    }
-    
-    // Boost confidence with multiple plugin agreement
-    if (metadata.performance && metadata.performance.pluginsUsed.length > 4) {
-      confidence = Math.min(0.99, confidence + 0.05)
-    }
-    
-    return Math.round(confidence * 100) / 100
+    HARASSMENT_KEYWORDS.forEach(keyword => {
+      if (variationContent.allTextLower.includes(keyword)) {
+        let harassmentScore = 8 // Base score for l33tspeak harassment
+        
+        // Scale based on severity
+        if (keyword.includes('kill') || keyword.includes('die')) {
+          harassmentScore = 12
+        }
+        
+        score += harassmentScore
+        flags.push(`L33T-HARASSMENT: "${keyword}" found in decoded variation`)
+      }
+    })
+
+    // Check for other toxic patterns that might be revealed
+    const toxicPatterns = [
+      { pattern: /fuck\s+you/gi, score: 10, name: 'Direct profanity' },
+      { pattern: /you\s+suck/gi, score: 6, name: 'Mild harassment' },
+      { pattern: /go\s+to\s+hell/gi, score: 8, name: 'Death wish' },
+      { pattern: /piece\s+of\s+shit/gi, score: 12, name: 'Severe insult' },
+      { pattern: /worthless\s+trash/gi, score: 10, name: 'Dehumanizing language' },
+      { pattern: /stupid\s+bitch/gi, score: 12, name: 'Gendered harassment' }
+    ]
+
+    toxicPatterns.forEach(({ pattern, score: patternScore, name }) => {
+      if (pattern.test(variationContent.allText)) {
+        score += patternScore
+        flags.push(`L33T-PATTERN: ${name} detected`)
+      }
+    })
+
+    return { score, flags }
   }
 
   // Analytics and insights
   getAnalyticsReport() {
     return {
-      version: '0.1.1',
+      version: '0.1.2',
       totalAnalyses: this.stats.totalAnalyses,
       performance: {
         averageTime: `${this.stats.averageTime.toFixed(2)}ms`,

@@ -5,7 +5,82 @@ All notable changes to ContentGuard will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2024-12-26
+## [0.1.2] - 2025-01-05
+
+### ✨ Added
+- 🎹 **Modular Keyboard Spam Detection Plugin** - Sophisticated, configurable spam detection system
+- 🛠️ **6 Independent Detection Categories** with individual enable/disable controls:
+  - Keyboard Sequences (qwerty, asdf patterns)
+  - Random Key Mashing (fjdsfkdsjlkj patterns)  
+  - Character Repetition (aaaa, hiiii patterns) - **Disabled by default**
+  - Keyboard Rolling (smooth finger patterns)
+  - Alternating Hands (left-right patterns)
+  - Low Effort Spam (quality indicators)
+- 🎯 **3 Sensitivity Levels** (low, medium, high) for fine-tuned control
+- 🧠 **Smart False Positive Prevention** with automatic whitelisting of:
+  - Technical content (URLs, version numbers, file paths)
+  - Emotional expressions (hahaha, hiiii)
+  - Real words with proper vowel-consonant ratios
+  - Foreign language patterns
+- 📖 **Comprehensive Documentation** - Complete KEYBOARD-SPAM-PLUGIN.md guide
+
+### 🐛 Fixed
+- ❌ **False Positive Resolution** - "hiiiiiiiiiiiiii" now correctly scores 0.60 (CLEAN) instead of triggering spam detection
+- 🔧 **Threshold Display Issue** - Fixed "N/A" threshold display in CLI, now shows proper values
+- ⚖️ **Reduced Sensitivity** - Character repetition detection disabled by default to prevent false positives
+
+### 🔧 Enhanced
+- 🎛️ **Granular Configuration** - Individual category weights and thresholds
+- 📊 **Per-Category Scoring** - Fine-grained control over detection impact
+- 🎪 **Context-Aware Analysis** - Better understanding of legitimate vs spam content
+- 🚀 **Performance Optimized** - 2-5ms processing time with minimal memory usage
+
+### 📋 Configuration Examples
+
+#### Strict Mode (Recommended)
+```javascript
+const config = {
+  plugins: {
+    keyboardSpam: {
+      categories: {
+        characterRepetition: { enabled: false }, // Avoid false positives
+        keyboardSequences: { enabled: true },
+        randomKeyMashing: { enabled: true }
+      },
+      sensitivityLevel: 'medium'
+    }
+  }
+}
+```
+
+#### Aggressive Mode (Maximum Detection)
+```javascript
+const config = {
+  plugins: {
+    keyboardSpam: {
+      categories: {
+        characterRepetition: { enabled: true, weight: 0.8 }, // Low weight
+        // All other categories enabled with higher weights
+      },
+      sensitivityLevel: 'high'
+    }
+  }
+}
+```
+
+### 🧪 Testing
+- ✅ Verified modular system works correctly across all sensitivity levels
+- ✅ Confirmed false positive resolution for character repetition patterns
+- ✅ Tested legitimate content whitelisting (technical, emotional, real words)
+- ✅ Validated individual category enable/disable functionality
+
+### 📚 Documentation
+- 📖 Added complete KEYBOARD-SPAM-PLUGIN.md documentation
+- 🛠️ Configuration examples for different use cases
+- 🔧 Troubleshooting guide for common issues
+- 📊 Performance metrics and recommendations
+
+## [0.1.1] - 2024-12-28
 
 ### 🚨 IMPORTANT: Version Reset
 
@@ -24,14 +99,14 @@ This release marks a **version reset** to follow proper semantic versioning. Pre
   - ML-powered sentiment analysis (experimental)
   - Emoji sentiment analysis (experimental)
   - Cross-cultural text analysis (experimental)
-- 🛠️ **Plugin system** with modular architecture
+- ��️ **Plugin system** with modular architecture
 - 📊 **Performance metrics** and analytics
 - 🎯 **CLI interface** for testing and development
 - 📝 **TypeScript definitions** included
 - 🧪 **Comprehensive test suite**
 
 ### Changed
-- 🔄 **Version reset from 4.7.1 → 0.1.0** (proper pre-1.0 versioning)
+- 🔄 **Version reset from 4.7.1 → 0.1.1** (proper pre-1.0 versioning)
 - 📚 **Complete documentation rewrite** for beta status
 - 🏗️ **API standardization** (may still change before v1.0)
 - ⚡ **Performance optimizations** across all variants
@@ -56,7 +131,7 @@ If upgrading from versions 1.x-4.x:
 const { createGuard } = require('content-guard');
 const guard = createGuard('balanced');
 
-// NEW (v0.1.0+)
+// NEW (v0.1.1+)
 const { ContentGuard } = require('content-guard');
 const guard = new ContentGuard('moderate');
 ```

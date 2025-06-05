@@ -1,6 +1,6 @@
 {
   "name": "content-guard",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "🛡️ Advanced content analysis and moderation system with multi-variant optimization. Features context-aware detection, harassment prevention, and ML-powered toxicity analysis. Pre-1.0 development version.",
   "main": "index.js",
   "types": "index.d.ts",
@@ -74,7 +74,8 @@
     "examples/",
     "README.md",
     "LICENSE",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "KEYBOARD-SPAM-PLUGIN.md"
   ],
   "exports": {
     ".": {

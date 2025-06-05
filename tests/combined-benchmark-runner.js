@@ -79,7 +79,7 @@ class CombinedBenchmarkRunner {
     this.showComparison = process.argv.includes('--comparison')
     this.showExtensiveFailures = process.argv.includes('--extensive-failures')
     this.showCategoryMatrix = process.argv.includes('--category-matrix')
-    this.showBenchmarkSplit = process.argv.includes('--benchmark-split')
+    this.saveReports = process.argv.includes('--save-reports') // NEW: Only save files when explicitly requested
     
     // Parse number of failure examples to show (--examples 10)
     const examplesIndex = process.argv.findIndex(arg => arg === '--examples')
@@ -783,11 +783,12 @@ class CombinedBenchmarkRunner {
       console.log('')
       console.log('   Output Control:')
       console.log('     --examples N: Show N failure examples per category (default: 3, max: 20)')
+      console.log('     --save-reports: Save detailed JSON and CSV report files')
       console.log('')
       console.log('   Examples:')
       console.log('     node combined-benchmark-runner.js --weighted --failures --examples 5')
       console.log('     node combined-benchmark-runner.js --versions v4.5-large,v4.0-base --detailed')
-      console.log('     node combined-benchmark-runner.js --full --weighted --category-matrix')
+      console.log('     node combined-benchmark-runner.js --full --weighted --category-matrix --save-reports')
     }
   }
 
@@ -1309,6 +1310,11 @@ class CombinedBenchmarkRunner {
   }
 
   saveDetailedReport() {
+    if (!this.saveReports) {
+      console.log('\n💡 Report files not saved (use --save-reports to enable file output)')
+      return
+    }
+    
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const reportPath = `combined-benchmark-report-${timestamp}.json`
     
