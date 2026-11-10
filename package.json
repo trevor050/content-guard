@@ -1,91 +1,71 @@
 {
   "name": "content-guard",
-  "version": "0.3.1",
-  "description": "🛡️ Advanced content analysis and moderation system with multi-variant optimization. Features context-aware detection, harassment prevention, and ML-powered toxicity analysis. Pre-1.0 development version.",
-  "main": "index.js",
-  "types": "index.d.ts",
-  "bin": {
-    "content-guard": "./cli/analyze.js",
-    "contentguard": "./cli/analyze.js"
-  },
-  "scripts": {
-    "test": "node tests/massive-benchmark-v3.js",
-    "test:simple": "node test-simple.js",
-    "benchmark": "node benchmark.js",
-    "demo": "node quick-demo.js",
-    "demo:simple": "node demo-simple.js",
-    "start": "node index.js"
-  },
+  "version": "5.0.0-rc.0",
+  "description": "Small, dependency-free text moderation for spam, toxicity and keyboard mashing, with obfuscation-resistant normalization and a reproducible benchmark.",
   "keywords": [
-    "content-moderation",
-    "spam-detection",
-    "harassment-detection",
-    "content-analysis",
-    "text-classification",
-    "toxicity-detection",
-    "context-aware",
-    "machine-learning",
-    "beta",
-    "development",
-    "pre-release",
-    "npm-package",
-    "security",
-    "safety",
-    "workplace-communication"
+    "moderation",
+    "spam",
+    "toxicity",
+    "profanity",
+    "leetspeak",
+    "homoglyph",
+    "unicode",
+    "confusables",
+    "contact-form"
   ],
-  "author": {
-    "name": "trevor050",
-    "url": "https://github.com/trevor050"
-  },
   "license": "MIT",
+  "author": "trevor050 (https://github.com/trevor050)",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/trevor050/content-guard.git"
   },
-  "bugs": {
-    "url": "https://github.com/trevor050/content-guard/issues"
-  },
   "homepage": "https://github.com/trevor050/content-guard#readme",
-  "dependencies": {
-    "@xenova/transformers": "^2.17.2",
-    "chalk": "^4.1.2",
-    "commander": "^14.0.0",
-    "compromise": "^14.10.0",
-    "confusables": "^1.1.1",
-    "emoji-sentiment": "^3.0.2",
-    "natural": "^6.12.0",
-    "node-rake": "^1.0.1",
-    "obscenity": "^0.2.0",
-    "sentiment": "^5.0.2",
-    "text-readability": "^1.1.1"
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0"
-  },
-  "engines": {
-    "node": ">=16.0.0",
-    "npm": ">=7.0.0"
-  },
-  "files": [
-    "index.js",
-    "index.d.ts",
-    "lib/",
-    "cli/",
-    "examples/",
-    "README.md",
-    "LICENSE",
-    "CHANGELOG.md",
-    "KEYBOARD-SPAM-PLUGIN.md"
-  ],
+  "bugs": "https://github.com/trevor050/content-guard/issues",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "require": "./index.js",
-      "import": "./index.js"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./package.json": "./package.json"
   },
-  "publishConfig": {
-    "access": "public"
+  "bin": {
+    "content-guard": "./dist/cli.mjs"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bench": "node bench/run.ts",
+    "demo:build": "node scripts/build-demo.ts",
+    "size": "node scripts/size.ts",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "bad-words": "^4.1.5",
+    "hyparquet": "^1.33.0",
+    "obscenity": "^0.4.6",
+    "tsdown": "^0.23.7",
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.0"
   }
 }
