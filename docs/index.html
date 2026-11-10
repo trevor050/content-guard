@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>content-guard playground</title>
+  <meta name="description" content="Paste text and see what content-guard flags and why. Runs entirely in your browser.">
+  <style>
+    :root {
+      --bg: #fbfbfa;
+      --fg: #1c1c1a;
+      --muted: #6b6b66;
+      --line: #e4e3df;
+      --field: #ffffff;
+      --accent: #2f5bd3;
+      --bad: #c4352b;
+      --bad-soft: #fbe9e7;
+      --ok: #2c7a4b;
+      --ok-soft: #e6f3eb;
+      --warn: #a76a00;
+      --bar: #ecebe7;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #151514;
+        --fg: #ecebe6;
+        --muted: #9a9993;
+        --line: #2c2c2a;
+        --field: #1d1d1c;
+        --accent: #7c9cff;
+        --bad: #ff7b6e;
+        --bad-soft: #3a1d1a;
+        --ok: #6fd39a;
+        --ok-soft: #16301f;
+        --warn: #f0b44c;
+        --bar: #2a2a28;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    main { max-width: 1080px; margin: 0 auto; padding: 32px 20px 48px; }
+    header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 24px; }
+    h1 { font-size: 20px; margin: 0; letter-spacing: -0.01em; }
+    header p { margin: 0; color: var(--muted); flex: 1 1 320px; }
+    header nav { display: flex; gap: 16px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 32px; }
+    @media (max-width: 820px) { .layout { grid-template-columns: 1fr; gap: 24px; } }
+
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--field);
+      color: var(--fg);
+      font: 16px/1.5 system-ui, sans-serif;
+    }
+    textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+    .examples { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 20px; }
+    .examples span { color: var(--muted); font-size: 13px; margin-right: 4px; align-self: center; }
+    .examples button {
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--fg);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .examples button:hover { border-color: var(--accent); color: var(--accent); }
+    label.threshold { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--muted); }
+    label.threshold input { flex: 1; accent-color: var(--accent); }
+    label.threshold output { font-family: var(--mono); color: var(--fg); min-width: 3ch; }
+
+    .status { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 600; margin: 0 0 16px; }
+    .status .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ok); }
+    .status.flagged .dot { background: var(--bad); }
+    .status.flagged { color: var(--bad); }
+    .status.idle { color: var(--muted); }
+    .status.idle .dot { background: var(--line); }
+
+    .scores { display: grid; grid-template-columns: 84px 1fr 44px; gap: 8px 12px; align-items: center; margin-bottom: 24px; }
+    .scores .name { font-size: 14px; }
+    .scores .value { font-family: var(--mono); font-size: 13px; text-align: right; color: var(--muted); }
+    .track { position: relative; height: 8px; background: var(--bar); border-radius: 4px; overflow: hidden; }
+    .fill { position: absolute; inset: 0 auto 0 0; background: var(--ok); border-radius: 4px; transition: width 120ms ease-out; }
+    .fill.over { background: var(--bad); }
+    .marker { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--fg); opacity: 0.35; }
+
+    h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 20px 0 8px; font-weight: 600; }
+    ol.reasons { list-style: none; margin: 0; padding: 0; }
+    ol.reasons li { display: grid; grid-template-columns: 48px 1fr; gap: 2px 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+    ol.reasons li:first-child { border-top: 0; padding-top: 0; }
+    .weight { font-family: var(--mono); font-size: 13px; color: var(--muted); padding-top: 1px; }
+    .rule { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+    .empty { color: var(--muted); margin: 0; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { font-size: 13px; padding: 2px 8px; border-radius: 4px; background: var(--bad-soft); color: var(--bad); }
+    .tag.info { background: var(--ok-soft); color: var(--ok); }
+    pre.normalized {
+      margin: 0;
+      font: 13px/1.5 var(--mono);
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--muted);
+      max-height: 160px;
+      overflow: auto;
+    }
+    footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>content-guard</h1>
+    <p>Spam, toxicity and keyboard-mash detection that sees through leetspeak, homoglyphs and zero-width tricks.</p>
+    <nav>
+      <a href="https://github.com/trevor050/content-guard">GitHub</a>
+      <a href="https://github.com/trevor050/content-guard#benchmark">Benchmark</a>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <section aria-label="Input">
+      <textarea id="input" spellcheck="false" placeholder="Paste a comment, a chat message or a contact-form submission…" aria-label="Text to analyze"></textarea>
+      <div class="examples" id="examples"><span>Try:</span></div>
+      <label class="threshold">Threshold
+        <input id="threshold" type="range" min="0.1" max="0.9" step="0.05" value="0.5">
+        <output id="threshold-value">0.50</output>
+      </label>
+    </section>
+
+    <section aria-label="Verdict" aria-live="polite">
+      <p class="status idle" id="status"><span class="dot"></span><span id="status-text">Waiting for text</span></p>
+      <div class="scores" id="scores"></div>
+      <h2>Why</h2>
+      <div id="reasons"></div>
+      <div id="obfuscation-block" hidden>
+        <h2>Obfuscation undone</h2>
+        <div class="tags" id="obfuscation"></div>
+      </div>
+      <h2>What the rules saw</h2>
+      <pre class="normalized" id="normalized"></pre>
+    </section>
+  </div>
+
+  <footer>
+    Everything runs in your browser; nothing you type leaves this page. content-guard is a rule-based first pass, not a model:
+    it is precise but misses subtle toxicity. The <a href="https://github.com/trevor050/content-guard#benchmark">benchmark</a> has the real numbers.
+  </footer>
+</main>
+
+<script type="module">
+  import { createGuard, CATEGORIES } from './content-guard.js'
+
+  const EXAMPLES = [
+    ['Leetspeak', 'y0u 4r3 4n 1d10t'],
+    ['Homoglyphs', 'Vеrіfу уоur ассоunt nоw оr іt wіll bе susреndеd'],
+    ['Zero-width', 'you​ are​ a​ m​o​r​o​n'],
+    ['Spaced out', 's h u t   u p   l o s e r'],
+    ['Contact-form spam', 'Dear website owner, we noticed your website is not on the first page of Google. Our SEO services can fix that, reply now!'],
+    ['SMS spam', 'Congratulations! You have won a £1000 cash prize. Txt CLAIM to 81010 now. T&Cs apply'],
+    ['Technical, fine', 'kill -9 the zombie process, then restart the server and execute the migration'],
+    ['Keyboard mash', 'asdkjfh sdlkfj qwpoeiru'],
+  ]
+
+  const $ = (id) => document.getElementById(id)
+  const input = $('input')
+  const slider = $('threshold')
+  let guard = createGuard()
+
+  const escape = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+
+  for (const [label, text] of EXAMPLES) {
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.textContent = label
+    button.addEventListener('click', () => {
+      input.value = text
+      render()
+      input.focus()
+    })
+    $('examples').append(button)
+  }
+
+  function render() {
+    const text = input.value
+    const threshold = guard.options.threshold
+    const status = $('status')
+    if (!text.trim()) {
+      status.className = 'status idle'
+      $('status-text').textContent = 'Waiting for text'
+      $('scores').innerHTML = CATEGORIES.map((c) => row(c, 0, threshold)).join('')
+      $('reasons').innerHTML = '<p class="empty">Nothing yet.</p>'
+      $('obfuscation-block').hidden = true
+      $('normalized').textContent = ''
+      return
+    }
+    const v = guard.analyze(text)
+    status.className = v.flagged ? 'status flagged' : 'status'
+    $('status-text').textContent = v.flagged ? `Flagged: ${v.categories.join(', ')}` : 'Looks fine'
+    $('scores').innerHTML = CATEGORIES.map((c) => row(c, v.scores[c], threshold)).join('')
+    $('reasons').innerHTML = v.reasons.length
+      ? `<ol class="reasons">${v.reasons.map((r) => `
+          <li><span class="weight">+${r.weight.toFixed(2)}</span>
+          <span>${escape(r.description)}<br><span class="rule">${escape(r.rule)}</span></span></li>`).join('')}</ol>`
+      : '<p class="empty">No rule fired.</p>'
+    const tags = [...v.obfuscation.map((t) => `<span class="tag">${t}</span>`)]
+    if (v.technicalContext) tags.push('<span class="tag info">technical context</span>')
+    $('obfuscation-block').hidden = tags.length === 0
+    $('obfuscation').innerHTML = tags.join('')
+    $('normalized').textContent = v.normalized
+  }
+
+  function row(category, score, threshold) {
+    const over = score >= threshold
+    return `<span class="name">${category}</span>
+      <span class="track"><span class="fill${over ? ' over' : ''}" style="width:${(score * 100).toFixed(1)}%"></span>
+      <span class="marker" style="left:${threshold * 100}%"></span></span>
+      <span class="value">${score.toFixed(2)}</span>`
+  }
+
+  slider.addEventListener('input', () => {
+    guard = createGuard({ threshold: Number(slider.value) })
+    $('threshold-value').textContent = Number(slider.value).toFixed(2)
+    render()
+  })
+  input.addEventListener('input', render)
+
+  input.value = EXAMPLES[0][1]
+  render()
+</script>
+</body>
+</html>

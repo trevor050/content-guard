@@ -57,13 +57,15 @@
     "bench": "node bench/run.ts",
     "demo:build": "node scripts/build-demo.ts",
     "size": "node scripts/size.ts",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "bench:legacy": "node bench/legacy.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
     "bad-words": "^4.1.5",
     "hyparquet": "^1.33.0",
     "obscenity": "^0.4.6",
+    "rolldown": "^1.3.1",
     "tsdown": "^0.23.7",
     "typescript": "^6.0.3",
     "vitest": "^5.1.0"
