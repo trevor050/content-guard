@@ -1,0 +1,8 @@
+{
+  "name": "content-guard-legacy-bench",
+  "private": true,
+  "description": "Installs the last 0.3.x release so bench/legacy.ts can measure it. Not part of the package.",
+  "dependencies": {
+    "content-guard": "0.3.1"
+  }
+}
