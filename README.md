@@ -12,7 +12,7 @@ It's a fast, explainable first pass, not a language model. It's precise and it d
 npm install content-guard
 ```
 
-Node 22+, or any browser, worker or edge runtime. ESM and CommonJS, types included, zero runtime dependencies. The bundle is 12.9 kB gzipped and the whole install is 147 kB (`npm run size`).
+Node 22+, or any browser, worker or edge runtime. ESM and CommonJS, types included, zero runtime dependencies. The bundle is 13.8 kB gzipped and the whole install is 158 kB (`npm run size`).
 
 ## Use it
 
@@ -103,7 +103,7 @@ Decoding is dictionary-guided: a token is only rewritten when the result is a wo
 
 The other two halves:
 
-- **Context.** Insults aimed at the reader ("you are pathetic") count for a lot more than opinions about things ("the turnout was pathetic"). Negation counts ("not a stupid question"). Text that reads as technical (code, file paths, CLI flags, domain vocabulary) gets untargeted borderline words softened, so `kill -9 the zombie process` or a code review calling `parse()` garbage doesn't get anyone banned. Slurs and threats are never softened.
+- **Context.** Insults aimed at the reader ("you are pathetic") count for a lot more than opinions about things ("the turnout was pathetic"). Negation counts ("not a stupid question"). So does who the insult is about: "I am such an idiot", "he called me an idiot" and "the word idiot" don't flag on their own, while "I think he is an idiot" and "I'm sure you're a moron" still do. Text that reads as technical (code, file paths, CLI flags, domain vocabulary) gets untargeted borderline words softened, and fixed terms like "dumb terminal", "garbage collector" and "idiot-proof" are skipped, so `kill -9 the zombie process` or a code review calling `parse()` garbage doesn't get anyone banned. Slurs and threats are never softened.
 - **Keyboard mashing.** `asdfghjkl` and `sdkjfh lkjsdf` are scored with an English letter-transition model (built from public-domain Gutenberg books) plus keyboard adjacency. `hahahaha`, `soooo` and `kubectl` are fine.
 
 ## Benchmark
@@ -114,7 +114,7 @@ Every number here comes from `npm run bench`, which downloads openly licensed pu
 
 | System | Precision | Recall | F1 | Benign tech FPR |
 | --- | ---: | ---: | ---: | ---: |
-| **content-guard** | **0.638** | 0.452 | **0.529** | 1.5% |
+| **content-guard** | **0.640** | 0.450 | **0.528** | 1.2% |
 | [obscenity](https://github.com/jo3-l/obscenity) (word list + anti-obfuscation) | 0.343 | 0.088 | 0.140 | 0.8% |
 | [bad-words](https://github.com/web-mech/badwords) (word list) | 0.260 | 0.149 | 0.189 | 2.3% |
 | Naive Bayes trained on the Civil Comments validation split | 0.419 | 0.319 | 0.362 | 16.2% |
@@ -134,7 +134,7 @@ Every number here comes from `npm run bench`, which downloads openly licensed pu
 | Obfuscated harmless messages flagged | **0.0%** | 4.5% | 1.4% |
 | Obfuscated spam caught | 86.4% | n/a | n/a |
 
-**Speed:** about 5,800 messages per second on one core of a 2020 M1 MacBook Air (p50 113 µs, p99 620 µs, mean message length 294 characters), measured while five other agents were hammering the same laptop, so take it as a floor.
+**Speed:** about 5,100 messages per second on one core of a 2020 M1 MacBook Air (p50 143 µs, p99 1.0 ms, mean message length 294 characters), measured while five other agents were hammering the same laptop. Back-to-back runs of the same code on that machine varied by up to 2x, so take it as a floor.
 
 The full report has the threshold sweep, per-transform tables, a keyboard-mash sanity check and dataset checksums.
 
@@ -144,6 +144,7 @@ The full report has the threshold sweep, per-transform tables, a keyboard-mash s
 - **It misses polite poison.** Recall on Civil Comments is 45%. A lot of what crowd raters call toxic is snark, contempt and political hostility with no toxic vocabulary at all. No word list will ever catch "people like you are the reason this country is failing". If you need that, run a model on whatever content-guard lets through (see below).
 - **A model trained on your data will beat it on your data.** The forty-line Naive Bayes wins on SMS spam because it learns 2005 UK texting vocabulary ("ringtone", "txt", "150p"). That's the point, and also the problem: the same model flags 10–16% of ordinary Stack Exchange questions. content-guard has no training data to overfit to.
 - **Obfuscation is where it earns its keep.** Word-list filters fall over the moment someone types `1d10t` or swaps in a Cyrillic `о`. This doesn't.
+- **Reported abuse is only partly understood.** Self-directed insults, "called me a ...", and mentions of a word are handled. A quoted second-person insult (`he wrote "you are an idiot"`), a third-person report ("she called him an idiot"), and reported profanity or threats ("he told me to fuck off") still flag, because the rules can't tell quoting from saying. Handling those more broadly cost recall on the dev split: Civil Comments raters label about half of such comments toxic.
 - **English only.** The lexicon, phrase rules and mash detector are all English. Other languages pass through without false positives in the tests, but they also aren't moderated.
 
 ### Escalating to a model
@@ -157,7 +158,7 @@ if (verdict.scores.toxicity > 0.15) return await yourToxicityModel(text) // e.g.
 return accept()
 ```
 
-content-guard doesn't ship a model, deliberately. It would add hundreds of megabytes to a package that's currently 13 kB.
+content-guard doesn't ship a model, deliberately. It would add hundreds of megabytes to a package that's currently 14 kB.
 
 ### Compared with 0.3.1
 
@@ -165,12 +166,12 @@ Same data, from `npm run bench:legacy` ([`bench/results/legacy.md`](bench/result
 
 | | This rewrite | 0.3.1 (`new ContentGuard('moderate')`) |
 | --- | ---: | ---: |
-| Civil Comments F1 (4,000-comment sample) | 0.500 | 0.209 |
-| SMS spam F1 | 0.822 | 0.039 |
-| Benign tech text flagged | 1.7% | 9.2% |
+| Civil Comments F1 (4,000-comment sample) | 0.503 | 0.209 |
+| SMS spam F1 | 0.823 | 0.039 |
+| Benign tech text flagged | 1.3% | 9.2% |
 | Obfuscated toxic messages caught (holdout) | 97.3% | 20.9% |
-| Time per message | 0.22 ms | 2.43 ms |
-| Install size | 1 package, 147 kB | 135 packages, 346 MB |
+| Time per message (same run, shared machine) | 0.63 ms | 3.92 ms |
+| Install size | 1 package, 158 kB | 135 packages, 346 MB |
 
 The old README claimed 91–94% accuracy for four "v4.5 variants". None of that was reproducible, so it's gone.
 

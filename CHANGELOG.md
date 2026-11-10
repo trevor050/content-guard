@@ -30,6 +30,11 @@ any range like `>=4` behave sensibly.
   "fancy font" letters, zalgo marks, Unicode confusables (generated from the
   UTS #39 table), leetspeak, asterisk censoring, spaced-out, dotted, stretched
   and glued letters. Each verdict reports which of these were undone.
+- Toxicity scoring that weighs who an insult is aimed at: second-person
+  insults count more, while negated, self-directed ("I am such an idiot"),
+  reported ("he called me an idiot") and mentioned ("the word idiot") insults,
+  and fixed technical terms ("dumb terminal", "garbage collector"), do not flag
+  on their own.
 - Contact-form input: `{ name, email, subject, message }`, with disposable-email
   and link-in-name signals.
 - `blockTerms` and `allowTerms` options.
