@@ -8,3 +8,4 @@ coverage/
 bench/.cache/
 bench/legacy/node_modules/
 bench/legacy/package-lock.json
+.smoke/

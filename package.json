@@ -58,7 +58,8 @@
     "demo:build": "node scripts/build-demo.ts",
     "size": "node scripts/size.ts",
     "prepack": "npm run build",
-    "bench:legacy": "node bench/legacy.ts"
+    "bench:legacy": "node bench/legacy.ts",
+    "smoke": "node scripts/smoke-pack.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
