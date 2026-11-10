@@ -76,12 +76,18 @@ export function detectToxicity(text: NormalizedText, context: Context, lexicon: 
   const reasons: Reason[] = []
   const tokens = text.decoded.split(' ')
   const seen = new Map<string, number>()
+  const isTerm = (word: string) => lexicon.forms.has(word)
+  const softenedPhrases = new Set<number>()
 
   for (let i = 0; i < tokens.length; i++) {
     const term = lexicon.forms.get(tokens[i]!)
     if (!term) continue
 
+    if (isTechnicalTerm(tokens, i)) continue
+
     const targeted = isTargeted(tokens, i)
+    const softening = term.kind === 'insult' ? notInsultingAnyone(tokens, i, targeted, isTerm) : undefined
+    const label = term.kind === 'insult' ? 'Insult' : 'Profanity'
     let weight = term.weight
     let rule: string = term.kind
     let description: string
@@ -89,13 +95,21 @@ export function detectToxicity(text: NormalizedText, context: Context, lexicon: 
       description = `Slur: "${term.word}"`
     } else if (isNegated(tokens, i)) {
       weight *= 0.3
-      description = `${term.kind === 'insult' ? 'Insult' : 'Profanity'}: "${tokens[i]}" (softened: negated)`
+      description = `${label}: "${tokens[i]}" (softened: negated)`
+    } else if (softening) {
+      // "I am such an idiot", "he called me an idiot", "the word idiot": the
+      // writer is not insulting anyone, so the phrase alone should not flag.
+      // Several insults in one such phrase ("I am a stupid idiot") count once.
+      if (softenedPhrases.has(softening.start)) continue
+      softenedPhrases.add(softening.start)
+      weight *= 0.3
+      description = `${label}: "${tokens[i]}" (softened: ${softening.why})`
     } else if (targeted) {
       weight *= term.kind === 'insult' ? 1.7 : 1.3
       rule = `${term.kind}:targeted`
-      description = `${term.kind === 'insult' ? 'Insult' : 'Profanity'} aimed at the reader: "${tokens[i]}"`
+      description = `${label} aimed at the reader: "${tokens[i]}"`
     } else {
-      description = `${term.kind === 'insult' ? 'Insult' : 'Profanity'}: "${tokens[i]}"`
+      description = `${label}: "${tokens[i]}"`
       if (context.technical) {
         weight *= 0.4
         description += ' (softened: technical context)'
@@ -134,6 +148,73 @@ function isNegated(tokens: readonly string[], index: number): boolean {
     if (NEGATIONS.has(tokens[j]!)) return true
   }
   return false
+}
+
+// Words allowed between a first-person subject and the insult: "I am such a
+// complete idiot", "I was being so stupid", "we were total fools".
+const FILLERS = new Set(
+  'a an the so such really totally complete completely absolute absolutely utter utterly bit of little kind sort being been be just real biggest big total pretty kinda'.split(' '),
+)
+const SELF_SUBJECTS: Readonly<Record<string, readonly string[]>> = {
+  i: ['am', 'was', 'feel', 'felt', 'must', 'look', 'looked', 'sound', 'sounded', 'can', 'could', 'have', 'had'],
+}
+// "we're" decodes to "were", which collides with "you were", so it is left out.
+const SELF_CONTRACTIONS = new Set(['im', 'ive'])
+const NAMING_VERBS = new Set(['call', 'calls', 'called', 'calling', 'named', 'labeled', 'labelled'])
+const NAMING_OBJECTS = new Set(['me', 'myself'])
+const ARTICLES = new Set(['the', 'a', 'an', 'this', 'that', 'these', 'those', 'such'])
+const MENTION_NOUNS = new Set(['word', 'words', 'term', 'terms', 'slur', 'slurs', 'insult', 'insults', 'name', 'names'])
+
+/**
+ * Explicit constructions where an insult word is not aimed at anyone else:
+ * a first-person subject ("I am such an idiot"), being called something
+ * ("he called me an idiot"), self-description after the fact ("what an idiot I
+ * am"), or talking about the word itself ("the word idiot"). Proximity alone is
+ * not enough: "I think he is an idiot" and "I'm sure you're a moron" still count.
+ */
+function notInsultingAnyone(
+  tokens: readonly string[],
+  index: number,
+  targeted: boolean,
+  isTerm: (word: string) => boolean,
+): { why: string; start: number } | undefined {
+  // Talking about the word itself: "the word idiot", "a term like libtard".
+  const [m1 = '', m2 = '', m3 = ''] = [tokens[index - 1], tokens[index - 2], tokens[index - 3]]
+  if ((MENTION_NOUNS.has(m1) && ARTICLES.has(m2)) || (m1 === 'like' && MENTION_NOUNS.has(m2) && (m2.endsWith('s') || ARTICLES.has(m3)))) {
+    return { why: 'mentioned, not used', start: index }
+  }
+
+  // Walk back over fillers and other lexicon words to where the phrase starts.
+  let start = index
+  while (start > 0 && start > index - 6 && (FILLERS.has(tokens[start - 1]!) || isTerm(tokens[start - 1]!))) start--
+  const one = tokens[start - 1] ?? ''
+  const two = tokens[start - 2] ?? ''
+  if (SELF_CONTRACTIONS.has(one) || SELF_SUBJECTS[two]?.includes(one)) return { why: 'self-directed', start }
+  if (NAMING_OBJECTS.has(one) && NAMING_VERBS.has(two)) return { why: 'reported speech', start }
+  // "what an idiot I am" is self-directed unless a "you" says otherwise.
+  const after = tokens.slice(index + 1, index + 4).join(' ')
+  if (!targeted && /^(?:that )?(?:i am|im|i was|i can be)\b/.test(after)) return { why: 'self-directed', start }
+  return undefined
+}
+
+// Fixed technical or idiomatic terms that contain a lexicon word but insult no one.
+const TECHNICAL_TERMS: ReadonlyArray<readonly [string, RegExp]> = [
+  ['dumb', /\bdumb (?:terminals?|pipes?|clients?|components?|phones?|quotes|switch(?:es)?|luck|waiters?|bells?)\b/],
+  ['garbage', /\bgarbage (?:collect\w*|in garbage out|values?|data|bytes?|output|truck|disposal)\b|\bgarbage in\b/],
+  ['trash', /\b(?:trash (?:cans?|bins?|folder|icon|talk\w*)|empty (?:the )?trash)\b/],
+  ['idiot', /\bidiot (?:proof\w*|lights?)\b/],
+  ['fool', /\bfool (?:proof\w*)\b|\bfools (?:gold|mate|errand|paradise)\b|\bapril fools?\b/],
+  ['pig', /\b(?:guinea|apache) pigs?\b|\bpig (?:latin|iron)\b/],
+  ['dick', /\bmoby dick\b|\bphilip k dick\b/],
+]
+const TECHNICAL_WORDS = new Set(TECHNICAL_TERMS.map(([word]) => word))
+
+function isTechnicalTerm(tokens: readonly string[], index: number): boolean {
+  const word = tokens[index]!
+  const base = word === 'fools' ? 'fool' : word === 'pigs' ? 'pig' : word
+  if (!TECHNICAL_WORDS.has(base)) return false
+  const nearby = tokens.slice(Math.max(0, index - 2), index + 4).join(' ')
+  return TECHNICAL_TERMS.some(([w, pattern]) => w === base && pattern.test(nearby))
 }
 
 /** A second-person pronoun shortly before the word, or "you"/"off" right after it. */

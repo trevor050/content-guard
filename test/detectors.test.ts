@@ -111,3 +111,74 @@ describe('scoring', () => {
     expect(createGuard({ threshold: 0.7 }).isFlagged(text)).toBe(false)
   })
 })
+
+describe('who an insult is aimed at', () => {
+  // Regression cases reported in review, verbatim.
+  it.each([
+    'ugh I am such an idiot, I forgot my keys again',
+    'he called me an idiot and I reported him to the moderators',
+    'the master branch aborted because the slave replica was a dumb terminal',
+  ])('does not flag: %s', (text) => expect(analyze(text).flagged).toBe(false))
+
+  it.each([
+    "I'm so stupid, I deleted the wrong folder",
+    'I was being a complete idiot yesterday',
+    'what an idiot I am',
+    'I am a stupid idiot',
+    'she said I was stupid',
+    'my brother called me a moron at dinner',
+    'they keep calling me a loser',
+    'the word "idiot" is not allowed in this channel',
+    'please stop using words like libtard here',
+  ])('softens self-directed, reported and mentioned insults: %s', (text) => {
+    const verdict = analyze(text)
+    expect(verdict.flagged).toBe(false)
+    expect(verdict.reasons.some((r) => /self-directed|reported speech|mentioned/.test(r.description))).toBe(true)
+  })
+
+  it.each([
+    'I am not saying you are an idiot, but you are an idiot',
+    'someone should tell you that you are worthless',
+    "you're the idiot, I am not",
+    "I'm sure you're a moron",
+    'you called me an idiot, you idiot',
+    'I think he is an idiot',
+    'I am talking to an idiot',
+    'Enjoy your one term, asshole.',
+    'in other words, a parasite.',
+    'Suppose you were an idiot',
+  ])('still flags: %s', (text) => expect(analyze(text).categories).toContain('toxicity'))
+
+  it('never softens slurs, threats or profanity in these constructions', () => {
+    expect(analyze('he called me a faggot').categories).toContain('toxicity')
+    expect(analyze('I am going to kill you, idiot').categories).toContain('toxicity')
+    expect(analyze("I'm such a fucking idiot").reasons.some((r) => r.rule === 'profanity')).toBe(true)
+  })
+})
+
+describe('technical terms that contain insult words', () => {
+  it.each([
+    'it is just a dumb terminal on the network',
+    'the modem is a dumb pipe, all the logic lives in the router',
+    'split it into smart and dumb components',
+    'the garbage collector pauses for 200ms',
+    'garbage in, garbage out',
+    'drag it to the trash bin',
+    'we need an idiot-proof installer',
+    'make the form foolproof and fool-proof',
+    'I volunteered as a guinea pig for the beta',
+    'add a dummy variable for each region',
+    'that is a killer feature',
+    'master/slave replication is deprecated in favor of primary/replica',
+    'abort the transaction and retry',
+    'fatal error: kill -9 the hung process',
+    'execute the script and terminate the worker',
+    'the child process was killed by the OOM killer',
+    'Moby Dick is a long book',
+  ])('does not flag: %s', (text) => expect(analyze(text).flagged).toBe(false))
+
+  it('still flags the same words used as insults', () => {
+    expect(analyze('you are a dumb terminal of a person, idiot').categories).toContain('toxicity')
+    expect(analyze('your code is garbage and so are you, moron').categories).toContain('toxicity')
+  })
+})
