@@ -26,12 +26,12 @@ type AsyncClassifier = (text: string) => Promise<boolean>
 
 const silence = async <T,>(fn: () => Promise<T>): Promise<T> => {
   // 0.3.1 logs to the console from inside analyze(); keep the report readable.
-  const saved = [console.log, console.warn, console.info]
+  const { log, warn, info } = console
   console.log = console.warn = console.info = () => {}
   try {
     return await fn()
   } finally {
-    ;[console.log, console.warn, console.info] = saved
+    Object.assign(console, { log, warn, info })
   }
 }
 
