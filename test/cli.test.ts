@@ -38,6 +38,6 @@ describe('cli', () => {
     expect(result.stdout).toContain('REVIEW (truncated input)')
     expect(result.stdout).toContain('unread tail')
     const json = run(['--json'], ' '.repeat(300_000) + 'kill yourself')
-    expect(JSON.parse(json.stdout).truncated).toBe(true)
+    expect(JSON.parse(json.stdout)).toMatchObject({ truncated: true, inputChars: 300_013, analyzedChars: 250_000 })
   })
 })

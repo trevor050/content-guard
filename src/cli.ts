@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs'
 import { parseArgs } from 'node:util'
 import { CATEGORIES, type Category, createGuard, type Verdict } from './index.ts'
+import { MAX_INPUT_CHARS } from './input.ts'
 
 const HELP = `Usage: content-guard [options] [text...]
 
@@ -65,6 +66,7 @@ if (categories?.some((c) => !CATEGORIES.includes(c))) fail(`--only accepts ${CAT
 const guard = createGuard({ threshold, categories, contextAware: !values['no-context'] })
 
 let messages: string[]
+let stdinChars: number | undefined
 if (positionals.length > 0) {
   messages = [positionals.join(' ')]
 } else if (process.stdin.isTTY) {
@@ -73,7 +75,17 @@ if (positionals.length > 0) {
   // Pipes can be nonblocking (EAGAIN on a large synchronous stdin read).
   process.stdin.setEncoding('utf8')
   const chunks: string[] = []
-  for await (const chunk of process.stdin) chunks.push(String(chunk))
+  let captured = 0
+  let received = 0
+  const captureLimit = values.lines ? Infinity : MAX_INPUT_CHARS + 1
+  for await (const chunk of process.stdin) {
+    const text = String(chunk)
+    received += text.length
+    const keep = text.slice(0, Math.max(0, captureLimit - captured))
+    if (keep) chunks.push(keep)
+    captured += keep.length
+  }
+  if (!values.lines) stdinChars = received
   const input = chunks.join('')
   messages = values.lines ? input.split(/\r?\n/).filter((line) => line.trim()) : [input]
 }
@@ -97,7 +109,10 @@ function format(text: string, verdict: Verdict): string {
 
 let flagged = false
 for (const message of messages) {
-  const verdict = guard.analyze(message)
+  const analyzed = guard.analyze(message)
+  const verdict: Verdict = stdinChars !== undefined && stdinChars > analyzed.inputChars
+    ? { ...analyzed, flagged: true, truncated: true, inputChars: stdinChars }
+    : analyzed
   flagged ||= verdict.flagged
   process.stdout.write(values.json ? `${JSON.stringify(verdict)}\n` : `${format(message, verdict)}\n`)
 }
