@@ -8,11 +8,14 @@
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { runNpm } from './npm.ts'
 
 const root = resolve(import.meta.dirname, '..')
 const dir = join(root, '.smoke')
 const app = join(dir, 'app')
-const run = (cmd: string, args: string[], cwd = app) => execFileSync(cmd, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] })
+const run = (cmd: 'npm' | 'node', args: string[], cwd = app) => cmd === 'npm'
+  ? runNpm(args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] })
+  : execFileSync(process.execPath, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] })
 
 rmSync(dir, { recursive: true, force: true })
 mkdirSync(app, { recursive: true })
@@ -46,7 +49,7 @@ export { flagged }
   console.log('types ok (ESM and CJS resolution)')
   let status = 0
   try {
-    run(join(app, 'node_modules', '.bin', 'content-guard'), ['y0u are an 1d10t'])
+    run('npm', ['exec', '--offline', '--', 'content-guard', 'y0u are an 1d10t'])
   } catch (error) {
     status = (error as { status: number }).status
   }
