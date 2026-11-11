@@ -12,6 +12,7 @@ import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { parquetReadObjects } from 'hyparquet'
 
 export interface Example {
@@ -31,7 +32,7 @@ export interface DatasetInfo {
   readonly sha256: Record<string, string>
 }
 
-const CACHE = new URL('./.cache/', import.meta.url).pathname
+const CACHE = fileURLToPath(new URL('./.cache/', import.meta.url))
 mkdirSync(CACHE, { recursive: true })
 
 const CIVIL_REVISION = 'f2970eb3a55777454c94069077cc8d9b5866312d'
@@ -77,7 +78,12 @@ export async function loadCivilComments(): Promise<{ split: Split; info: Dataset
 
 export async function loadSmsSpam(): Promise<{ split: Split; info: DatasetInfo }> {
   const zip = await download(SMS_URL, 'sms_spam.zip')
-  const tsv = execFileSync('unzip', ['-p', zip, 'SMSSpamCollection'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+  const options = { encoding: 'utf8' as const, maxBuffer: 64 * 1024 * 1024 }
+  // Windows includes PowerShell/.NET ZIP support; it need not have a Unix unzip binary.
+  const script = `$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false);Add-Type -AssemblyName System.IO.Compression.FileSystem;$zip=[System.IO.Compression.ZipFile]::OpenRead('${zip.replace(/'/g, "''")}');try{$reader=[System.IO.StreamReader]::new($zip.GetEntry('SMSSpamCollection').Open());try{[Console]::Write($reader.ReadToEnd())}finally{$reader.Dispose()}}finally{$zip.Dispose()}`
+  const tsv = process.platform === 'win32'
+    ? execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')], options)
+    : execFileSync('unzip', ['-p', zip, 'SMSSpamCollection'], options)
   const rows = tsv
     .split('\n')
     .filter(Boolean)
