@@ -67,6 +67,8 @@ guard.analyze(text)
 guard.isFlagged(text)
 ```
 
+`analyze` inspects the first 20,000 characters of the combined name, subject and message. Reject longer submissions before calling it; text beyond that limit is not moderated.
+
 Build the guard once and reuse it. Everything is synchronous and side-effect free, so it's fine in a request handler, a worker or a Cloudflare/Vercel edge function.
 
 There are no presets on purpose. The benchmark sweeps the threshold (0.3 / 0.5 / 0.7), and that one knob covers the whole precision/recall trade-off. Five named presets would just be five names for numbers.
