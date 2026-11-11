@@ -12,7 +12,7 @@ It's a fast, explainable first pass, not a language model. It's precise and it d
 npm install content-guard
 ```
 
-Node 22+, or any browser, worker or edge runtime. ESM and CommonJS, types included, zero runtime dependencies. The bundle is 14.6 kB gzipped and the package is about 168 kB unpacked (`npm run size`).
+Node 22+, or any browser, worker or edge runtime. ESM and CommonJS, types included, zero runtime dependencies. The bundle is 14.6 kB gzipped and the package is about 169 kB unpacked (`npm run size`).
 
 ## Use it
 
@@ -178,7 +178,7 @@ Same data, from `npm run bench:legacy` ([`bench/results/legacy.md`](bench/result
 | Benign tech text flagged | 1.3% | 9.2% |
 | Obfuscated toxic messages caught (holdout) | 97.3% | 20.9% |
 | Time per message (same run, shared machine) | 0.20 ms | 1.73 ms |
-| Install size | 1 package, about 168 kB | 135 packages, 346 MB |
+| Install size | 1 package, about 169 kB | 155 packages, 325 MiB (WSL2) |
 
 The old README claimed 91–94% accuracy for four "v4.5 variants". None of that was reproducible, so it's gone.
 
