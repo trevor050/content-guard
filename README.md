@@ -12,7 +12,7 @@ It's a fast, explainable first pass, not a language model. It's precise and it d
 npm install content-guard
 ```
 
-Node 22+, or any browser, worker or edge runtime. ESM and CommonJS, types included, zero runtime dependencies. The bundle is 13.8 kB gzipped and the whole install is 158 kB (`npm run size`).
+Node 22+, or any browser, worker or edge runtime. ESM and CommonJS, types included, zero runtime dependencies. The bundle is 14.6 kB gzipped and the package is about 168 kB unpacked (`npm run size`).
 
 ## Use it
 
@@ -25,6 +25,9 @@ analyze('уоu аrе а l0s3r, k.y.s')
 ```js
 {
   flagged: true,
+  truncated: false,
+  inputChars: 22,
+  analyzedChars: 22,
   categories: ['toxicity'],
   scores: { toxicity: 0.979, spam: 0, gibberish: 0 },
   reasons: [
@@ -67,7 +70,9 @@ guard.analyze(text)
 guard.isFlagged(text)
 ```
 
-`analyze` inspects the first 20,000 characters of the combined name, subject and message. Reject longer submissions before calling it; text beyond that limit is not moderated.
+Long submissions are analyzed in overlapping 20,000-character windows, with 512 characters of shared context. Long whitespace, invisible padding and repeated-letter runs are compacted before windowing. Overlapping matches count once; technical context stays local to each window.
+
+The hard work budget is 250,000 UTF-16 code units across name, subject, message and email (text-field separators included). Beyond it, the verdict has `truncated: true`, reports `inputChars` and `analyzedChars`, and **always sets `flagged: true`**. `isFlagged()` and the CLI fail closed too. Reject or review an incomplete verdict; empty `categories` or zero scores do not certify an unread tail. `normalized` shows the decoded analysis windows, including overlap for long inputs.
 
 Build the guard once and reuse it. Everything is synchronous and side-effect free, so it's fine in a request handler, a worker or a Cloudflare/Vercel edge function.
 
@@ -85,7 +90,7 @@ npx content-guard --lines --json < comments.txt   # one JSON verdict per line
 npx content-guard --only spam --threshold 0.3 "FREE entry, txt WIN to 80086"
 ```
 
-Exit code is `1` when anything was flagged, so it drops straight into scripts and git hooks.
+Exit code is `1` when anything was flagged or truncated, so it drops straight into scripts and git hooks.
 
 ## What it catches
 
@@ -136,7 +141,7 @@ Every number here comes from `npm run bench`, which downloads openly licensed pu
 | Obfuscated harmless messages flagged | **0.0%** | 4.5% | 1.4% |
 | Obfuscated spam caught | 86.4% | n/a | n/a |
 
-**Speed:** about 5,100 messages per second on one core of a 2020 M1 MacBook Air (p50 143 µs, p99 1.0 ms, mean message length 294 characters), measured while five other agents were hammering the same laptop. Back-to-back runs of the same code on that machine varied by up to 2x, so take it as a floor.
+**Speed:** about 7,700 messages per second on one core of a Ryzen 7 7700X in WSL2 (Node 24, p50 89 µs, p99 564 µs, mean message length 294 characters). Timing depends on the machine and competing work; the classification tables above reproduced unchanged in the Windows-PC rerun.
 
 The full report has the threshold sweep, per-transform tables, a keyboard-mash sanity check and dataset checksums.
 
@@ -172,8 +177,8 @@ Same data, from `npm run bench:legacy` ([`bench/results/legacy.md`](bench/result
 | SMS spam F1 | 0.823 | 0.039 |
 | Benign tech text flagged | 1.3% | 9.2% |
 | Obfuscated toxic messages caught (holdout) | 97.3% | 20.9% |
-| Time per message (same run, shared machine) | 0.63 ms | 3.92 ms |
-| Install size | 1 package, 158 kB | 135 packages, 346 MB |
+| Time per message (same run, shared machine) | 0.20 ms | 1.73 ms |
+| Install size | 1 package, about 168 kB | 135 packages, 346 MB |
 
 The old README claimed 91–94% accuracy for four "v4.5 variants". None of that was reproducible, so it's gone.
 

@@ -3,7 +3,8 @@ import { detectGibberish } from './detectors/gibberish.ts'
 import { detectSpam } from './detectors/spam.ts'
 import { detectToxicity, type ToxicityLexicon } from './detectors/toxicity.ts'
 import { FORM_INDEX, type Term } from './lexicon.ts'
-import { createDecoder, normalize } from './normalize.ts'
+import { boundedInput, inputWindows, WINDOW_CHARS } from './input.ts'
+import { compactPadding, createDecoder, normalize, type Technique } from './normalize.ts'
 import { CATEGORIES, type Category, type GuardOptions, type Input, type Reason, type Verdict } from './types.ts'
 
 export const DEFAULT_THRESHOLD = 0.5
@@ -35,20 +36,28 @@ export function createGuard(options: GuardOptions = {}): Guard {
   function analyze(input: Input): Verdict {
     const submission = typeof input === 'string' ? { message: input } : (input ?? {})
     if (typeof submission !== 'object') throw new TypeError('input must be a string or a submission object')
-    const original = [submission.name, submission.subject, submission.message]
-      .filter((part): part is string => typeof part === 'string' && part.length > 0)
-      .join('\n')
-      .slice(0, 20_000)
-
-    const text = normalize(original, decoder)
-    const context = contextAware ? detectContext(original, text.plain) : { technical: false, signals: [] }
-
-    const reasons: Reason[] = []
-    if (enabled.has('toxicity')) reasons.push(...detectToxicity(text, context, lexicon))
-    if (enabled.has('spam')) {
-      reasons.push(...detectSpam(text, context, { original, email: submission.email, name: submission.name }))
+    const bounded = boundedInput(submission)
+    const compacted = bounded.text.length > WINDOW_CHARS ? compactPadding(bounded.text) : { text: bounded.text, techniques: [] }
+    const obfuscation = new Set<Technique>(compacted.techniques)
+    const normalized: string[] = []
+    const unique = new Map<string, Reason>()
+    let technicalContext = false
+    for (const original of inputWindows(compacted.text)) {
+      const text = normalize(original, decoder)
+      const context = contextAware ? detectContext(original, text.plain) : { technical: false, signals: [] }
+      technicalContext ||= context.technical
+      normalized.push(text.decoded)
+      for (const technique of text.techniques) obfuscation.add(technique)
+      const found: Reason[] = []
+      if (enabled.has('toxicity')) found.push(...detectToxicity(text, context, lexicon))
+      if (enabled.has('spam')) found.push(...detectSpam(text, context, { original, email: bounded.email, name: bounded.name }))
+      if (enabled.has('gibberish')) found.push(...detectGibberish(text, context))
+      for (const reason of found) {
+        const key = `${reason.category}\0${reason.rule}\0${reason.match}`
+        if ((unique.get(key)?.weight ?? -Infinity) < reason.weight) unique.set(key, reason)
+      }
     }
-    if (enabled.has('gibberish')) reasons.push(...detectGibberish(text, context))
+    const reasons = [...unique.values()]
     reasons.sort((a, b) => b.weight - a.weight)
 
     const scores = { toxicity: 0, spam: 0, gibberish: 0 } as Record<Category, number>
@@ -59,13 +68,16 @@ export function createGuard(options: GuardOptions = {}): Guard {
     const flaggedCategories = CATEGORIES.filter((c) => enabled.has(c) && scores[c] >= threshold)
 
     return {
-      flagged: flaggedCategories.length > 0,
+      flagged: bounded.truncated || flaggedCategories.length > 0,
+      truncated: bounded.truncated,
+      inputChars: bounded.inputChars,
+      analyzedChars: bounded.analyzedChars,
       categories: flaggedCategories,
       scores,
       reasons,
-      obfuscation: text.techniques,
-      technicalContext: context.technical,
-      normalized: text.decoded,
+      obfuscation: [...obfuscation],
+      technicalContext,
+      normalized: normalized.join('\n'),
     }
   }
 

@@ -16,7 +16,7 @@ Options:
   -h, --help           Show this help
   -v, --version        Show the version
 
-Exit status: 0 if nothing was flagged, 1 if anything was flagged, 2 on usage errors.
+Exit status: 0 for complete unflagged input, 1 for flagged or truncated input, 2 on usage errors.
 
 Examples:
   content-guard "y0u are an 1d10t"
@@ -70,7 +70,11 @@ if (positionals.length > 0) {
 } else if (process.stdin.isTTY) {
   fail('no text given')
 } else {
-  const input = readFileSync(0, 'utf8')
+  // Pipes can be nonblocking (EAGAIN on a large synchronous stdin read).
+  process.stdin.setEncoding('utf8')
+  const chunks: string[] = []
+  for await (const chunk of process.stdin) chunks.push(String(chunk))
+  const input = chunks.join('')
   messages = values.lines ? input.split(/\r?\n/).filter((line) => line.trim()) : [input]
 }
 
@@ -79,8 +83,9 @@ const paint = (code: number, text: string) => (color ? `\u001b[${code}m${text}\u
 
 function format(text: string, verdict: Verdict): string {
   const scores = CATEGORIES.map((c) => `${c} ${verdict.scores[c].toFixed(2)}`).join('  ')
-  const status = verdict.flagged ? paint(31, `FLAGGED (${verdict.categories.join(', ')})`) : paint(32, 'OK')
+  const status = verdict.truncated ? paint(31, 'REVIEW (truncated input)') : verdict.flagged ? paint(31, `FLAGGED (${verdict.categories.join(', ')})`) : paint(32, 'OK')
   const lines = [`${status}  ${paint(2, scores)}`]
+  if (verdict.truncated) lines.push(`  Input limit reached: analyzed ${verdict.analyzedChars} of ${verdict.inputChars} characters; reject or review the unread tail.`)
   if (messages.length > 1) lines.unshift(paint(1, text.length > 80 ? `${text.slice(0, 77)}...` : text))
   for (const reason of verdict.reasons) {
     lines.push(`  ${paint(2, `+${reason.weight.toFixed(2)}`)} ${reason.rule.padEnd(26)} ${reason.description}`)

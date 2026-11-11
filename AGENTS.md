@@ -22,3 +22,5 @@ Scripts are `.ts` run directly by Node (type stripping): needs Node >= 22.18. Im
 - Wildcard resolution builds a RegExp from the token; it must stay restricted to `[a-z*#%_]` (a Civil Comments row once crashed it).
 - Context softening never applies to slurs, threats, or targeted insults.
 - Homebrew `node@22` on Trevor's Mac is broken (missing simdjson dylib); use `npx -p node@22` to test the floor.
+
+- Input safety: `input.ts` budgets all fields at 250k UTF-16 units; unread tails set `truncated` and fail closed via `flagged`/CLI. Long text uses 20k windows with 512 overlap after padding compaction. Never reintroduce a silent slice or pass unbounded metadata to detectors.

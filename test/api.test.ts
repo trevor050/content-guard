@@ -10,6 +10,9 @@ describe('public API', () => {
   it('returns a complete verdict for clean text', () => {
     expect(analyze('Thanks, see you at the standup tomorrow.')).toEqual({
       flagged: false,
+      truncated: false,
+      inputChars: 'Thanks, see you at the standup tomorrow.'.length,
+      analyzedChars: 'Thanks, see you at the standup tomorrow.'.length,
       categories: [],
       scores: { toxicity: 0, spam: 0, gibberish: 0 },
       reasons: [],

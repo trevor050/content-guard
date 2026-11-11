@@ -78,7 +78,7 @@ const LEET: Readonly<Record<string, readonly string[]>> = {
 const WILDCARDS = new Set(['*', '#', '%', '_'])
 const WORD_CHAR = /[a-z0-9@$!|+€*#%(_]/
 const LEADING_PUNCT = /^[^a-z0-9@$|*#]+/
-const TRAILING_PUNCT = /[^a-z0-9@$*#|+]+$/
+const TRAILING_WORD_CHAR = /[a-z0-9@$*#|+]/
 const INNER_SEPARATORS = /[.\-_·•,/\\~:]/
 const SINGLE_LETTER_WORDS = new Set(['a', 'i', 'u'])
 const TWO_LETTER_WORDS = new Set(
@@ -111,6 +111,17 @@ export function createDecoder(extraTerms: Iterable<string> = []): Decoder {
 }
 
 const DEFAULT_DECODER = createDecoder()
+
+/** Shrink padding before long-input windowing, without cutting across hidden letters. */
+export function compactPadding(input: string): { text: string; techniques: Technique[] } {
+  const techniques: Technique[] = []
+  if (INVISIBLE_BETWEEN_LETTERS.test(input)) techniques.push('invisible-characters')
+  const text = input.replace(INVISIBLE, '').replace(/\s{2,}/g, '  ').replace(/(\p{L})\1{63,}/gu, (_run, letter: string) => {
+    if (!techniques.includes('stretching')) techniques.push('stretching')
+    return letter + letter
+  })
+  return { text, techniques }
+}
 
 /**
  * Normalize text for matching. Pure and synchronous; safe in any JS runtime.
@@ -214,8 +225,13 @@ function decode(lower: string, decoder: Decoder, techniques: Set<Technique>): st
 }
 
 function decodeChunk(chunk: string, decoder: Decoder, techniques: Set<Technique>): string[] {
+  const leadingTrimmed = chunk.replace(LEADING_PUNCT, '')
+  let end = leadingTrimmed.length
+  // A suffix regex retries every starting position when punctuation is internal.
+  while (end > 0 && !TRAILING_WORD_CHAR.test(leadingTrimmed[end - 1]!)) end--
+  const core = leadingTrimmed.slice(0, end)
   // Letters joined by separators: "f.u.c.k", "k-y-s".
-  const pieces = chunk.replace(LEADING_PUNCT, '').replace(TRAILING_PUNCT, '').split(INNER_SEPARATORS)
+  const pieces = core.split(INNER_SEPARATORS)
   if (pieces.length >= 3 && pieces.every((piece) => piece.length === 1 && WORD_CHAR.test(piece))) {
     const candidates = expand(pieces.join(''))
     for (const candidate of candidates) {
@@ -228,7 +244,6 @@ function decodeChunk(chunk: string, decoder: Decoder, techniques: Set<Technique>
     return [pieces.join('')]
   }
 
-  const core = chunk.replace(LEADING_PUNCT, '').replace(TRAILING_PUNCT, '')
   if (!core) return []
   if (/^[a-z]+$/.test(core)) return [destretch(core, decoder, techniques)]
 

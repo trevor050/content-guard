@@ -210,7 +210,7 @@
     }
     const v = guard.analyze(text)
     status.className = v.flagged ? 'status flagged' : 'status'
-    $('status-text').textContent = v.flagged ? `Flagged: ${v.categories.join(', ')}` : 'Looks fine'
+    $('status-text').textContent = v.truncated ? `Needs review: analyzed ${v.analyzedChars} of ${v.inputChars} characters` : v.flagged ? `Flagged: ${v.categories.join(', ')}` : 'Looks fine'
     $('scores').innerHTML = CATEGORIES.map((c) => row(c, v.scores[c], threshold)).join('')
     $('reasons').innerHTML = v.reasons.length
       ? `<ol class="reasons">${v.reasons.map((r) => `

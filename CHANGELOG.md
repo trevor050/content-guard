@@ -23,6 +23,8 @@ any range like `>=4` behave sensibly.
 
 ### Added
 
+- Long-input coverage through overlapping windows, bounded padding compaction, and explicit `truncated`/character-count fields. Incomplete input fails closed through the API and CLI.
+
 - `analyze(input)`, `isFlagged(input)` and `createGuard(options)`: one
   synchronous pipeline with three categories (`toxicity`, `spam`, `gibberish`),
   per-category scores in [0, 1], and a list of human-readable reasons.

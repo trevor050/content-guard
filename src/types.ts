@@ -18,8 +18,14 @@ export interface Reason {
 }
 
 export interface Verdict {
-  /** True when any enabled category scored at or above the threshold. */
+  /** True when a category reaches the threshold OR incomplete input needs review. */
   readonly flagged: boolean
+  /** True when the hard input budget left an unread tail. Always flagged for review. */
+  readonly truncated: boolean
+  /** Total submitted UTF-16 code units, including text-field separators and email. */
+  readonly inputChars: number
+  /** Submitted UTF-16 code units covered before the hard limit. */
+  readonly analyzedChars: number
   /** Categories at or above the threshold. */
   readonly categories: readonly Category[]
   /** Per-category score in [0, 1]. Computed as 1 - exp(-sum of weights). */
@@ -30,7 +36,7 @@ export interface Verdict {
   readonly obfuscation: readonly Technique[]
   /** True when the text looked technical or professional and borderline matches were softened. */
   readonly technicalContext: boolean
-  /** The decoded text the toxicity rules ran against. Useful for debugging. */
+  /** Decoded analysis windows (overlap included for long input). Useful for debugging. */
   readonly normalized: string
 }
 

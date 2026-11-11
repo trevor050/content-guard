@@ -31,4 +31,13 @@ describe('cli', () => {
     expect(run(['--threshold', '7', 'x']).status).toBe(2)
     expect(run(['--only', 'vibes', 'x']).status).toBe(2)
   })
+
+  it('never prints OK or exits zero for an unread tail', () => {
+    const result = run([], ' '.repeat(300_000) + 'kill yourself')
+    expect(result.status).toBe(1)
+    expect(result.stdout).toContain('REVIEW (truncated input)')
+    expect(result.stdout).toContain('unread tail')
+    const json = run(['--json'], ' '.repeat(300_000) + 'kill yourself')
+    expect(JSON.parse(json.stdout).truncated).toBe(true)
+  })
 })
