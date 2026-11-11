@@ -54,7 +54,7 @@ export function isMash(raw: string): boolean {
 
 export function detectGibberish(text: NormalizedText, context: Context): Reason[] {
   const words = text.plain
-    .replace(/\b(?:https?:\/\/|www\.)\S+|\S+@\S+/g, ' ')
+    .replace(/\b(?:https?:\/\/|www\.)\S+|(?<!\S)\S+@\S+/g, ' ')
     .split(/[^a-z0-9]+/)
     .filter((word) => word.length >= 2 && /^[a-z]+$/.test(word))
   if (words.length === 0) return []

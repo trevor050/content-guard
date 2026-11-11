@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { analyze, createGuard } from '../src/index.ts'
+import { detectGibberish } from '../src/detectors/gibberish.ts'
 
 const flags = (text: string, category: 'toxicity' | 'spam' | 'gibberish') => analyze(text).categories.includes(category)
 
@@ -180,5 +181,19 @@ describe('technical terms that contain insult words', () => {
   it('still flags the same words used as insults', () => {
     expect(analyze('you are a dumb terminal of a person, idiot').categories).toContain('toxicity')
     expect(analyze('your code is garbage and so are you, moron').categories).toContain('toxicity')
+  })
+})
+
+
+describe('gibberish email exclusion', () => {
+  it('does not rescan every suffix of a long token without an at-sign', () => {
+    const text = 'a'.repeat(100_000)
+    const start = performance.now()
+    expect(detectGibberish({ plain: text, decoded: text, techniques: [] }, { technical: false, signals: [] })).toEqual([])
+    expect(performance.now() - start).toBeLessThan(1000)
+  })
+
+  it.each(['asdfghjkl@example.invalid', '(asdfghjkl@example.invalid)', 'https://example.invalid/asdfghjkl'])('still ignores addresses and URLs: %s', (text) => {
+    expect(analyze(text).categories).not.toContain('gibberish')
   })
 })
